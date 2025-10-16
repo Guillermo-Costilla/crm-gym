@@ -1,8 +1,18 @@
 import { create } from "zustand"
 import api from "../config/api"
 
+// Restaurar user desde localStorage si existe
+const storedUser = (() => {
+  try {
+    const u = localStorage.getItem("user")
+    return u ? JSON.parse(u) : null
+  } catch (e) {
+    return null
+  }
+})()
+
 export const useAuthStore = create((set) => ({
-  user: null,
+  user: storedUser,
   token: localStorage.getItem("token") || null,
   loading: false,
   error: null,
@@ -15,14 +25,20 @@ export const useAuthStore = create((set) => ({
       return
     }
 
+    // Si ya tenemos el usuario en localStorage, restaurarlo y evitar petición inmediata
+    if (storedUser) {
+      set({ user: storedUser, isInitialized: true })
+      return
+    }
+
     try {
       // Verificar que el token sea válido haciendo una petición al dashboard
-      const response = await api.get("/dashboard")
-      // Si la petición es exitosa, el token es válido
+      await api.get("/dashboard")
       set({ isInitialized: true })
     } catch (error) {
-      // Si falla, limpiar el token
+      // Si falla, limpiar el token y user
       localStorage.removeItem("token")
+      localStorage.removeItem("user")
       set({ token: null, user: null, isInitialized: true })
     }
   },
@@ -34,6 +50,11 @@ export const useAuthStore = create((set) => ({
       const { token, usuario } = response.data
 
       localStorage.setItem("token", token)
+      try {
+        localStorage.setItem("user", JSON.stringify(usuario))
+      } catch (e) {
+        // si falla el stringify, continuar sin bloquear
+      }
       set({ token, user: usuario, loading: false })
       return { success: true }
     } catch (error) {
@@ -50,6 +71,9 @@ export const useAuthStore = create((set) => ({
       const { token, usuario } = response.data
 
       localStorage.setItem("token", token)
+      try {
+        localStorage.setItem("user", JSON.stringify(usuario))
+      } catch (e) {}
       set({ token, user: usuario, loading: false })
       return { success: true }
     } catch (error) {
@@ -61,6 +85,7 @@ export const useAuthStore = create((set) => ({
 
   logout: () => {
     localStorage.removeItem("token")
+    localStorage.removeItem("user")
     set({ user: null, token: null })
   },
 
