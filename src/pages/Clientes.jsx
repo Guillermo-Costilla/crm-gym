@@ -28,6 +28,7 @@ export default function Clientes() {
 
   const [formData, setFormData] = useState({
     nombre: "",
+    dni: "",
     email: "",
     telefono: "",
     fecha_nacimiento: "",
@@ -42,6 +43,7 @@ export default function Clientes() {
       setEditingCliente(cliente)
       setFormData({
         nombre: cliente.nombre,
+        dni: cliente.dni,
         email: cliente.email,
         telefono: cliente.telefono || "",
         fecha_nacimiento: cliente.fecha_nacimiento || "",
@@ -50,6 +52,7 @@ export default function Clientes() {
       setEditingCliente(null)
       setFormData({
         nombre: "",
+        dni: "",
         email: "",
         telefono: "",
         fecha_nacimiento: "",
@@ -65,6 +68,7 @@ export default function Clientes() {
     setEditingCliente(null)
     setFormData({
       nombre: "",
+      dni: "",
       email: "",
       telefono: "",
       fecha_nacimiento: "",
@@ -107,7 +111,7 @@ export default function Clientes() {
     (cliente) =>
       cliente.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
       cliente.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (cliente.telefono && cliente.telefono.includes(searchTerm)),
+      (cliente.telefono && cliente.dni && cliente.telefono.includes(searchTerm)),
   )
 
   return (
@@ -150,7 +154,7 @@ export default function Clientes() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Buscar por nombre, email o teléfono..."
+            placeholder="Buscar por nombre, DNI, email o teléfono..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-foreground placeholder-muted-foreground transition-smooth"
@@ -177,6 +181,7 @@ export default function Clientes() {
               <thead className="bg-muted">
                 <tr>
                   <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Nombre</th>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">DNI</th>
                   <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Email</th>
                   <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Teléfono</th>
                   <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Fecha Nacimiento</th>
@@ -196,6 +201,14 @@ export default function Clientes() {
                           <User className="w-5 h-5 text-primary-500" />
                         </div>
                         <span className="font-medium text-foreground">{cliente.nombre}</span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center w-10 h-10 bg-primary-500/10 rounded-full">
+                          <User className="w-5 h-5 text-primary-500" />
+                        </div>
+                        <span className="font-medium text-foreground">{cliente.dni}</span>
                       </div>
                     </td>
                     <td className="py-4 px-6">
@@ -320,6 +333,23 @@ export default function Clientes() {
                     onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
                     className="w-full pl-10 pr-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-foreground placeholder-muted-foreground transition-smooth"
                     placeholder="Juan Pérez"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="dni" className="block text-sm font-medium text-foreground">
+                  DNI *
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <input
+                    id="dni"
+                    type="number"
+                    value={formData.nombre}
+                    onChange={(e) => setFormData({ ...formData, dni: e.target.value })}
+                    className="w-full pl-10 pr-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-foreground placeholder-muted-foreground transition-smooth"
+                    placeholder="999999999"
                     required
                   />
                 </div>
