@@ -34,7 +34,7 @@ export default function Pagos() {
     monto: "",
     tipo: "mensual",
     fecha_pago: format(new Date(), "yyyy-MM-dd"),
-    pagado: true,
+    pagado: 1,
   })
 
   useEffect(() => {
@@ -48,7 +48,7 @@ export default function Pagos() {
       monto: "",
       tipo: "mensual",
       fecha_pago: format(new Date(), "yyyy-MM-dd"),
-      pagado: true,
+      pagado: 1,
     })
     setShowModal(true)
     setError(null)
@@ -62,7 +62,7 @@ export default function Pagos() {
       monto: "",
       tipo: "mensual",
       fecha_pago: format(new Date(), "yyyy-MM-dd"),
-      pagado: true,
+      pagado: 1,
     })
     setError(null)
   }
