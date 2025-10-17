@@ -346,7 +346,7 @@ export default function Clientes() {
                   <input
                     id="dni"
                     type="number"
-                    value={formData.dni}
+                    value={formData.dni?.toString() || ""}
                     onChange={(e) => setFormData({ ...formData, dni: e.target.value })}
                     className="w-full pl-10 pr-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-foreground placeholder-muted-foreground transition-smooth"
                     placeholder="999999999"

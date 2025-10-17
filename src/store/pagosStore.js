@@ -1,5 +1,7 @@
 import { create } from "zustand"
 import api from "../config/api"
+import { sanitizePagoData } from "../utils/sanitizeData"
+
 
 export const usePagosStore = create((set, get) => ({
   pagos: [],
@@ -44,14 +46,19 @@ export const usePagosStore = create((set, get) => ({
   },
 
   createPago: async (data) => {
-    try {
-      const response = await api.post("/pagos", data)
-      await get().fetchPagos()
-      return { success: true, data: response.data }
-    } catch (error) {
-      return { success: false, error: error.response?.data?.error || "Error al crear pago" }
+  try {
+    const payload = sanitizePagoData(data)
+    const response = await api.post("/pagos", payload)
+    await get().fetchPagos()
+    return { success: true, data: response.data }
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data?.error || "Error al registrar pago"
     }
-  },
+  }
+}
+,
 
   exportarPagos: async (mes) => {
     try {
