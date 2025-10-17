@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import api from "../config/api"
-import { sanitizePagoData } from "../utils/sanitizeData"
+import { sanitizePagoData } from "@/utils/sanitizeData"
 
 
 export const usePagosStore = create((set, get) => ({
