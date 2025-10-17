@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { useClientesStore } from "../store/clientesStore"
+import { sanitizeClienteData } from "@/utils/sanitizeData"
 import { format } from "date-fns"
 import {
   Users,
@@ -33,7 +34,6 @@ export default function Clientes() {
     telefono: "",
     fecha_nacimiento: "",
   })
-
   const handleInput = (event) => {
         setFormData({
             ...formData,
@@ -85,22 +85,24 @@ export default function Clientes() {
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+  e.preventDefault()
+
+  const payload = sanitizeClienteData(formData)
+  console.log("Payload enviado:", payload) // 👈 Verificá que tenga fecha_nacimiento y dni como valores válidos
+
+  const result = await createCliente(payload)
+
+  if (result.success) {
+    setSuccess("Cliente creado correctamente")
     setError(null)
+  } else {
+    setError(result.error)
     setSuccess(null)
-
-    const result = editingCliente ? await updateCliente(editingCliente.id, formData) : await createCliente(formData)
-
-    if (result.success) {
-      setSuccess(editingCliente ? "Cliente actualizado exitosamente" : "Cliente creado exitosamente")
-      setTimeout(() => {
-        handleCloseModal()
-        setSuccess(null)
-      }, 1500)
-    } else {
-      setError(result.error)
-    }
   }
+}
+
+console.log("formData crudo:", formData)
+console.log("Payload limpio:", sanitizeClienteData(formData))
 
   const handleDelete = async (id) => {
     if (!confirm("¿Estás seguro de eliminar este cliente?")) return
@@ -338,7 +340,7 @@ export default function Clientes() {
                     id="nombre"
                     type="text"
                     value={formData.nombre}
-                    onChange={handleInput}
+                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
                     className="w-full pl-10 pr-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-foreground placeholder-muted-foreground transition-smooth"
                     placeholder="Juan Pérez"
                     required
@@ -355,7 +357,7 @@ export default function Clientes() {
                     id="dni"
                     type="number"
                     value={formData.dni?.toString() || ""}
-                    onChange={handleInput}
+                    onChange={(e) => setFormData({ ...formData, dni: e.target.value })}
                     className="w-full pl-10 pr-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-foreground placeholder-muted-foreground transition-smooth"
                     placeholder="999999999"
                     required
@@ -373,7 +375,7 @@ export default function Clientes() {
                     id="email"
                     type="email"
                     value={formData.email}
-                    onChange={handleInput}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="w-full pl-10 pr-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-foreground placeholder-muted-foreground transition-smooth"
                     placeholder="juan@email.com"
                     required
@@ -391,7 +393,7 @@ export default function Clientes() {
                     id="telefono"
                     type="tel"
                     value={formData.telefono}
-                    onChange={handleInput}
+                    onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
                     className="w-full pl-10 pr-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-foreground placeholder-muted-foreground transition-smooth"
                     placeholder="3815551234"
                   />
@@ -408,7 +410,7 @@ export default function Clientes() {
                     id="fecha_nacimiento"
                     type="date"
                     value={formData.fecha_nacimiento}
-                    onChange={handleInput}
+                    onChange={(e) => setFormData({ ...formData, fecha_nacimiento: e.target.value })}
                     className="w-full pl-10 pr-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-foreground placeholder-muted-foreground transition-smooth"
                   />
                 </div>
