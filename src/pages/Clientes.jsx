@@ -34,6 +34,8 @@ export default function Clientes() {
     fecha_nacimiento: "",
   })
 
+  console.log(formData)
+
   useEffect(() => {
     fetchClientes()
   }, [fetchClientes])
