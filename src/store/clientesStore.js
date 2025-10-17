@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import api from "../config/api";
-import { sanitizeClienteData } from "@/utils/sanitizeData"
+import { sanitizeClienteData } from "../utils/sanitizeData"
 
 
 export const useClientesStore = create((set, get) => ({
