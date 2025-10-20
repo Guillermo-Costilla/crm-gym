@@ -1,10 +1,5 @@
 
----
-
-## 🎨 README — Frontend (`crm-gym-frontend`) EN DESARROLLO 🛠️🔧⚙️
-
-markdown
-# CRM Gym — Frontend
+# CRM Gym — Frontend EN DESARROLLO 🛠️🔧⚙️
 
 Interfaz administrativa para gestión de clientes, asistencias, pagos y métricas en gimnasios. Construida con React 18, Tailwind, Zustand, con enfoque en UX profesional, animaciones suaves.
 
