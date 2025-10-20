@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react"
-import { useClientesStore } from "../store/clientesStore"
-import { sanitizeClienteData } from "@/utils/sanitizeData"
-import { format } from "date-fns"
+import { useEffect, useState } from "react";
+import { useClientesStore } from "../store/clientesStore";
+import { sanitizeClienteData } from "@/utils/sanitizeData";
+import { format } from "date-fns";
 import {
   Users,
   Search,
@@ -16,16 +16,23 @@ import {
   AlertCircle,
   CheckCircle,
   TrendingUp,
-} from "lucide-react"
+} from "lucide-react";
 
 export default function Clientes() {
-  const { clientes, loading, fetchClientes, createCliente, updateCliente, deleteCliente } = useClientesStore()
+  const {
+    clientes,
+    loading,
+    fetchClientes,
+    createCliente,
+    updateCliente,
+    deleteCliente,
+  } = useClientesStore();
 
-  const [searchTerm, setSearchTerm] = useState("")
-  const [showModal, setShowModal] = useState(false)
-  const [editingCliente, setEditingCliente] = useState(null)
-  const [error, setError] = useState(null)
-  const [success, setSuccess] = useState(null)
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [editingCliente, setEditingCliente] = useState(null);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
 
   const [formData, setFormData] = useState({
     nombre: "",
@@ -33,96 +40,97 @@ export default function Clientes() {
     email: "",
     telefono: "",
     fecha_nacimiento: "",
-  })
+  });
   const handleInput = (event) => {
-        setFormData({
-            ...formData,
-            [event.target.name]: event.target.value
-        })
-    }
-  console.log(formData)
+    setFormData({
+      ...formData,
+      [event.target.name]: event.target.value,
+    });
+  };
 
   useEffect(() => {
-    fetchClientes()
-  }, [fetchClientes])
+    fetchClientes();
+  }, [fetchClientes]);
 
   const handleOpenModal = (cliente = null) => {
     if (cliente) {
-      setEditingCliente(cliente)
+      setEditingCliente(cliente);
       setFormData({
         nombre: cliente.nombre,
         dni: cliente.dni,
         email: cliente.email,
         telefono: cliente.telefono || "",
         fecha_nacimiento: cliente.fecha_nacimiento || "",
-      })
+      });
     } else {
-      setEditingCliente(null)
+      setEditingCliente(null);
       setFormData({
         nombre: "",
         dni: "",
         email: "",
         telefono: "",
         fecha_nacimiento: "",
-      })
+      });
     }
-    setShowModal(true)
-    setError(null)
-    setSuccess(null)
-  }
+    setShowModal(true);
+    setError(null);
+    setSuccess(null);
+  };
 
   const handleCloseModal = () => {
-    setShowModal(false)
-    setEditingCliente(null)
+    setShowModal(false);
+    setEditingCliente(null);
     setFormData({
       nombre: "",
       dni: "",
       email: "",
       telefono: "",
       fecha_nacimiento: "",
-    })
-    setError(null)
-  }
-
-  const handleSubmit = async (e) => {
-  e.preventDefault()
-
-  const payload = sanitizeClienteData(formData)
-  console.log("Payload enviado:", payload) // 👈 Verificá que tenga fecha_nacimiento y dni como valores válidos
-
-  const result = await createCliente(payload)
-
-  if (result.success) {
-    setSuccess("Cliente creado correctamente")
-    setError(null)
-  } else {
-    setError(result.error)
-    setSuccess(null)
-  }
-}
-
-console.log("formData crudo:", formData)
-console.log("Payload limpio:", sanitizeClienteData(formData))
+    });
+    setError(null);
+  };
 
   const handleDelete = async (id) => {
-    if (!confirm("¿Estás seguro de eliminar este cliente?")) return
+    if (!confirm("¿Estás seguro de eliminar este cliente?")) return;
 
-    const result = await deleteCliente(id)
+    const result = await deleteCliente(id);
     if (result.success) {
-      setSuccess("Cliente eliminado exitosamente")
-      setTimeout(() => setSuccess(null), 3000)
+      setSuccess("Cliente eliminado exitosamente");
+      setTimeout(() => setSuccess(null), 3000);
     } else {
-      setError(result.error)
-      setTimeout(() => setError(null), 3000)
+      setError(result.error);
+      setTimeout(() => setError(null), 3000);
     }
-  }
+  };
 
   const filteredClientes = clientes.filter(
     (cliente) =>
       cliente.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
       cliente.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (cliente.telefono && cliente.dni && cliente.telefono.includes(searchTerm)),
-  )
+      (cliente.telefono && cliente.dni && cliente.telefono.includes(searchTerm))
+  );
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const payload = sanitizeClienteData(formData);
+
+    const result = editingCliente
+      ? await updateCliente(editingCliente.id, payload)
+      : await createCliente(payload);
+
+    if (result.success) {
+      setSuccess(
+        editingCliente ? "Cliente actualizado" : "Cliente creado correctamente"
+      );
+      setError(null);
+      fetchClientes();
+      handleCloseModal();
+    } else {
+      setError(result.error);
+      setSuccess(null);
+    }
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -133,7 +141,9 @@ console.log("Payload limpio:", sanitizeClienteData(formData))
             <Users className="w-8 h-8 text-primary-500" />
             Clientes
           </h1>
-          <p className="text-muted-foreground">Gestiona la base de datos de clientes del gimnasio</p>
+          <p className="text-muted-foreground">
+            Gestiona la base de datos de clientes del gimnasio
+          </p>
         </div>
         <button
           onClick={() => handleOpenModal()}
@@ -182,7 +192,9 @@ console.log("Payload limpio:", sanitizeClienteData(formData))
           <div className="text-center py-12">
             <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">
-              {searchTerm ? "No se encontraron clientes" : "No hay clientes registrados"}
+              {searchTerm
+                ? "No se encontraron clientes"
+                : "No hay clientes registrados"}
             </p>
           </div>
         ) : (
@@ -190,12 +202,24 @@ console.log("Payload limpio:", sanitizeClienteData(formData))
             <table className="w-full">
               <thead className="bg-muted">
                 <tr>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Nombre</th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">DNI</th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Email</th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Teléfono</th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Fecha Nacimiento</th>
-                  <th className="text-right py-4 px-6 text-sm font-semibold text-foreground">Acciones</th>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">
+                    Nombre
+                  </th>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">
+                    DNI
+                  </th>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">
+                    Email
+                  </th>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">
+                    Teléfono
+                  </th>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">
+                    Fecha Nacimiento
+                  </th>
+                  <th className="text-right py-4 px-6 text-sm font-semibold text-foreground">
+                    Acciones
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -210,7 +234,9 @@ console.log("Payload limpio:", sanitizeClienteData(formData))
                         <div className="flex items-center justify-center w-10 h-10 bg-primary-500/10 rounded-full">
                           <User className="w-5 h-5 text-primary-500" />
                         </div>
-                        <span className="font-medium text-foreground">{cliente.nombre}</span>
+                        <span className="font-medium text-foreground">
+                          {cliente.nombre}
+                        </span>
                       </div>
                     </td>
                     <td className="py-4 px-6">
@@ -218,7 +244,9 @@ console.log("Payload limpio:", sanitizeClienteData(formData))
                         <div className="flex items-center justify-center w-10 h-10 bg-primary-500/10 rounded-full">
                           <User className="w-5 h-5 text-primary-500" />
                         </div>
-                        <span className="font-medium text-foreground">{cliente.dni}</span>
+                        <span className="font-medium text-foreground">
+                          {cliente.dni}
+                        </span>
                       </div>
                     </td>
                     <td className="py-4 px-6">
@@ -236,7 +264,12 @@ console.log("Payload limpio:", sanitizeClienteData(formData))
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Calendar className="w-4 h-4" />
-                        {cliente.fecha_nacimiento ? format(new Date(cliente.fecha_nacimiento), "dd/MM/yyyy") : "-"}
+                        {cliente.fecha_nacimiento
+                          ? format(
+                              new Date(cliente.fecha_nacimiento),
+                              "dd/MM/yyyy"
+                            )
+                          : "-"}
                       </div>
                     </td>
                     <td className="py-4 px-6">
@@ -270,8 +303,12 @@ console.log("Payload limpio:", sanitizeClienteData(formData))
         <div className="bg-card border border-border rounded-xl p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground mb-1">Total Clientes</p>
-              <p className="text-3xl font-bold text-foreground">{clientes.length}</p>
+              <p className="text-sm text-muted-foreground mb-1">
+                Total Clientes
+              </p>
+              <p className="text-3xl font-bold text-foreground">
+                {clientes.length}
+              </p>
             </div>
             <Users className="w-10 h-10 text-primary-500" />
           </div>
@@ -280,7 +317,9 @@ console.log("Payload limpio:", sanitizeClienteData(formData))
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground mb-1">Resultados</p>
-              <p className="text-3xl font-bold text-foreground">{filteredClientes.length}</p>
+              <p className="text-3xl font-bold text-foreground">
+                {filteredClientes.length}
+              </p>
             </div>
             <Search className="w-10 h-10 text-cyan-500" />
           </div>
@@ -299,7 +338,10 @@ console.log("Payload limpio:", sanitizeClienteData(formData))
       {/* Modal de crear/editar */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleCloseModal} />
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={handleCloseModal}
+          />
           <div className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md animate-slide-up">
             {/* Header del modal */}
             <div className="flex items-center justify-between p-6 border-b border-border">
@@ -331,7 +373,10 @@ console.log("Payload limpio:", sanitizeClienteData(formData))
               )}
 
               <div className="space-y-2">
-                <label htmlFor="nombre" className="block text-sm font-medium text-foreground">
+                <label
+                  htmlFor="nombre"
+                  className="block text-sm font-medium text-foreground"
+                >
                   Nombre Completo *
                 </label>
                 <div className="relative">
@@ -340,7 +385,9 @@ console.log("Payload limpio:", sanitizeClienteData(formData))
                     id="nombre"
                     type="text"
                     value={formData.nombre}
-                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, nombre: e.target.value })
+                    }
                     className="w-full pl-10 pr-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-foreground placeholder-muted-foreground transition-smooth"
                     placeholder="Juan Pérez"
                     required
@@ -348,7 +395,10 @@ console.log("Payload limpio:", sanitizeClienteData(formData))
                 </div>
               </div>
               <div className="space-y-2">
-                <label htmlFor="dni" className="block text-sm font-medium text-foreground">
+                <label
+                  htmlFor="dni"
+                  className="block text-sm font-medium text-foreground"
+                >
                   DNI *
                 </label>
                 <div className="relative">
@@ -357,7 +407,9 @@ console.log("Payload limpio:", sanitizeClienteData(formData))
                     id="dni"
                     type="number"
                     value={formData.dni?.toString() || ""}
-                    onChange={(e) => setFormData({ ...formData, dni: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, dni: e.target.value })
+                    }
                     className="w-full pl-10 pr-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-foreground placeholder-muted-foreground transition-smooth"
                     placeholder="999999999"
                     required
@@ -366,7 +418,10 @@ console.log("Payload limpio:", sanitizeClienteData(formData))
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="email" className="block text-sm font-medium text-foreground">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-foreground"
+                >
                   Email *
                 </label>
                 <div className="relative">
@@ -375,7 +430,9 @@ console.log("Payload limpio:", sanitizeClienteData(formData))
                     id="email"
                     type="email"
                     value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
                     className="w-full pl-10 pr-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-foreground placeholder-muted-foreground transition-smooth"
                     placeholder="juan@email.com"
                     required
@@ -384,7 +441,10 @@ console.log("Payload limpio:", sanitizeClienteData(formData))
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="telefono" className="block text-sm font-medium text-foreground">
+                <label
+                  htmlFor="telefono"
+                  className="block text-sm font-medium text-foreground"
+                >
                   Teléfono
                 </label>
                 <div className="relative">
@@ -393,7 +453,9 @@ console.log("Payload limpio:", sanitizeClienteData(formData))
                     id="telefono"
                     type="tel"
                     value={formData.telefono}
-                    onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, telefono: e.target.value })
+                    }
                     className="w-full pl-10 pr-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-foreground placeholder-muted-foreground transition-smooth"
                     placeholder="3815551234"
                   />
@@ -401,7 +463,10 @@ console.log("Payload limpio:", sanitizeClienteData(formData))
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="fecha_nacimiento" className="block text-sm font-medium text-foreground">
+                <label
+                  htmlFor="fecha_nacimiento"
+                  className="block text-sm font-medium text-foreground"
+                >
                   Fecha de Nacimiento
                 </label>
                 <div className="relative">
@@ -410,7 +475,12 @@ console.log("Payload limpio:", sanitizeClienteData(formData))
                     id="fecha_nacimiento"
                     type="date"
                     value={formData.fecha_nacimiento}
-                    onChange={(e) => setFormData({ ...formData, fecha_nacimiento: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        fecha_nacimiento: e.target.value,
+                      })
+                    }
                     className="w-full pl-10 pr-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-foreground placeholder-muted-foreground transition-smooth"
                   />
                 </div>
@@ -436,5 +506,5 @@ console.log("Payload limpio:", sanitizeClienteData(formData))
         </div>
       )}
     </div>
-  )
+  );
 }
