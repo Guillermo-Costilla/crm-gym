@@ -109,6 +109,9 @@ export default function Login() {
 
           {/* Link de registro */}
           <div className="mt-6 text-center">
+            <p>Usuario de prueba: admin@test.com <br />
+              Pass: admin1234
+            </p>
             <p className="text-sm text-muted-foreground">
               ¿No tienes cuenta?{" "}
               <Link to="/register" className="text-primary-500 hover:text-primary-400 font-semibold transition-smooth">

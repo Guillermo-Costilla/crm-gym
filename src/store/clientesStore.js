@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import api from "../config/api";
-import { sanitizeClienteData } from "@/utils/sanitizeData"
-
+import { sanitizeClienteData } from "@/utils/sanitizeData";
 
 export const useClientesStore = create((set, get) => ({
   clientes: [],
@@ -31,18 +30,18 @@ export const useClientesStore = create((set, get) => ({
   },
 
   createCliente: async (data) => {
-  try {
-    const payload = sanitizeClienteData(data)
-    const response = await api.post("/clientes", payload)
-    await get().fetchClientes()
-    return { success: true, data: response.data }
-  } catch (error) {
-    return {
-      success: false,
-      error: error.response?.data?.error || "Error al crear cliente"
+    try {
+      const payload = sanitizeClienteData(data);
+      const response = await api.post("/clientes", payload);
+      await get().fetchClientes();
+      return { success: true, data: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || "Error al crear cliente",
+      };
     }
-  }
-},
+  },
   updateCliente: async (id, data) => {
     try {
       const response = await api.put(`/clientes/${id}`, data);
