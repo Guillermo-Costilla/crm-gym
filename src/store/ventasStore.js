@@ -52,6 +52,24 @@ export const useVentasStore = create((set, get) => ({
     }
   },
 
+  getIngresosPorMes: async (mes) => {
+    try {
+      const response = await api.get(`/ventas/ingresos?mes=${mes}`)
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  getResumenVentas: async (periodo = "mensual") => {
+    try {
+      const response = await api.get(`/ventas/resumen?periodo=${periodo}`)
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
   createVenta: async (data) => {
     try {
       const response = await api.post("/ventas", data)

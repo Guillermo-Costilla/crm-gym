@@ -32,9 +32,10 @@ export default function Pagos() {
   const [formData, setFormData] = useState({
     cliente_id: "",
     monto: "",
-    tipo: "mensual",
+    tipo: "Mensual",
     fecha_pago: format(new Date(), "yyyy-MM-dd"),
     pagado: 1,
+    metodo: ""
   })
 
   useEffect(() => {
@@ -46,9 +47,10 @@ export default function Pagos() {
     setFormData({
       cliente_id: "",
       monto: "",
-      tipo: "mensual",
+      tipo: "Mensual",
       fecha_pago: format(new Date(), "yyyy-MM-dd"),
       pagado: 1,
+      metodo: ""
     })
     setShowModal(true)
     setError(null)
@@ -60,9 +62,10 @@ export default function Pagos() {
     setFormData({
       cliente_id: "",
       monto: "",
-      tipo: "mensual",
+      tipo: "Mensual",
       fecha_pago: format(new Date(), "yyyy-MM-dd"),
       pagado: 1,
+      metodo: ""
     })
     setError(null)
   }
@@ -374,8 +377,6 @@ export default function Pagos() {
                   required
                 >
                   <option value="mensual">Mensual</option>
-                  <option value="trimestral">Trimestral</option>
-                  <option value="semestral">Semestral</option>
                   <option value="anual">Anual</option>
                 </select>
               </div>
@@ -395,6 +396,23 @@ export default function Pagos() {
                     required
                   />
                 </div>
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="metodo" className="block text-sm font-medium text-foreground">
+                  Método de Pago *
+                </label>
+                <select
+                  id="metodo"
+                  value={formData.metodo}
+                  onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
+                  className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-foreground transition-smooth appearance-none"
+                  required
+                >
+                  <option value="efectivo">Efectivo</option>
+                  <option value="transferencia">Transferencia</option>
+                  <option value="qr">QR</option>
+                </select>
               </div>
 
               <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">

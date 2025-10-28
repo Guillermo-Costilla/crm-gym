@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import api from "../config/api"
-import { sanitizePagoData } from "@/utils/sanitizeData"
+import { sanitizePagoData } from "../utils/sanitizeData"
 
 
 export const usePagosStore = create((set, get) => ({
@@ -30,6 +30,24 @@ export const usePagosStore = create((set, get) => ({
   getPagosPendientes: async () => {
     try {
       const response = await api.get("/pagos/pendientes")
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  getPagosVencidos: async () => {
+    try {
+      const response = await api.get("/pagos/vencidos")
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  getPagosProximos: async (dias = 7) => {
+    try {
+      const response = await api.get(`/pagos/proximos?dias=${dias}`)
       return response.data
     } catch (error) {
       throw error

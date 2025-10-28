@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import api from "../config/api";
-import { sanitizeClienteData } from "@/utils/sanitizeData";
+import { sanitizeClienteData } from "../utils/sanitizeData";
 
 export const useClientesStore = create((set, get) => ({
   clientes: [],
@@ -86,10 +86,17 @@ export const useClientesStore = create((set, get) => ({
     }
   },
 
-  getFrecuenciaCliente: async (id) => {
+  getMetricasCliente: async (id) => {
     try {
-      const response = await api.get(`/clientes/metricas/frecuencia/${id}`);
-      return response.data;
+      // Las métricas del cliente se obtienen junto con sus asistencias
+      const [asistencias, pagos] = await Promise.all([
+        api.get(`/asistencias/por-cliente/${id}`),
+        api.get(`/pagos/por-cliente/${id}`)
+      ]);
+      return {
+        asistencias: asistencias.data,
+        pagos: pagos.data
+      };
     } catch (error) {
       throw error;
     }
