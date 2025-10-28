@@ -13,7 +13,8 @@ export function sanitizePagoData(data) {
     cliente_id: data.cliente_id ? parseInt(data.cliente_id, 10) : null,
     monto: data.monto ? parseFloat(data.monto) : null,
     metodo: data.metodo?.trim() || null,
+    tipo: data.tipo || null,
     fecha_pago: data.fecha_pago || null,
-    observaciones: data.observaciones?.trim() || null
+    pagado: data.pagado ? 1 : 0,
   }
 }
