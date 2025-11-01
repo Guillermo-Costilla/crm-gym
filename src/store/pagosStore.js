@@ -66,6 +66,7 @@ export const usePagosStore = create((set, get) => ({
   createPago: async (data) => {
   try {
     const payload = sanitizePagoData(data)
+    console.log("🧾 Payload:", sanitizePagoData(formData))
     const response = await api.post("/pagos", payload)
     await get().fetchPagos()
     return { success: true, data: response.data }

@@ -35,7 +35,7 @@ export default function Pagos() {
     tipo: "Mensual",
     fecha_pago: format(new Date(), "yyyy-MM-dd"),
     pagado: 1,
-    metodo: ""
+    metodo: "efectivo"
   })
 
   useEffect(() => {
@@ -50,7 +50,7 @@ export default function Pagos() {
       tipo: "Mensual",
       fecha_pago: format(new Date(), "yyyy-MM-dd"),
       pagado: 1,
-      metodo: ""
+      metodo: "efectivo"
     })
     setShowModal(true)
     setError(null)
@@ -65,7 +65,7 @@ export default function Pagos() {
       tipo: "Mensual",
       fecha_pago: format(new Date(), "yyyy-MM-dd"),
       pagado: 1,
-      metodo: ""
+      metodo: "efectivo"
     })
     setError(null)
   }
@@ -397,7 +397,7 @@ export default function Pagos() {
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <label htmlFor="metodo" className="block text-sm font-medium text-foreground">
                   Método de Pago *
