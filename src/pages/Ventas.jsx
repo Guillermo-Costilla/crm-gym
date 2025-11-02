@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react"
-import { useVentasStore } from "../store/ventasStore"
-import { useClientesStore } from "../store/clientesStore"
-import { useProductosStore } from "../store/productosStore"
-import { format } from "date-fns"
+import { useEffect, useState } from "react";
+import { useVentasStore } from "../store/ventasStore";
+import { useClientesStore } from "../store/clientesStore";
+import { useProductosStore } from "../store/productosStore";
+import { format } from "date-fns";
 import {
   ShoppingCart,
   Search,
@@ -17,103 +17,128 @@ import {
   CheckCircle,
   TrendingUp,
   Download,
-} from "lucide-react"
+} from "lucide-react";
 
 export default function Ventas() {
-  const { ventas, loading, fetchVentas, createVenta, exportarVentas } = useVentasStore()
-  const { clientes, fetchClientes } = useClientesStore()
-  const { productos, fetchProductos } = useProductosStore()
+  const { ventas, loading, fetchVentas, createVenta, exportarVentas } =
+    useVentasStore();
+  const { clientes, fetchClientes } = useClientesStore();
+  const { productos, fetchProductos } = useProductosStore();
+  console.log(productos);
+  console.log(clientes);
+  
 
-  const [searchTerm, setSearchTerm] = useState("")
-  const [showModal, setShowModal] = useState(false)
-  const [showExportModal, setShowExportModal] = useState(false)
-  const [error, setError] = useState(null)
-  const [success, setSuccess] = useState(null)
-  const [exportMes, setExportMes] = useState(format(new Date(), "yyyy-MM"))
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [exportMes, setExportMes] = useState(format(new Date(), "yyyy-MM"));
+
+  const fechaHoy = new Date().toISOString().slice(0, 10);
 
   const [formData, setFormData] = useState({
     cliente_id: "",
     producto_id: "",
     cantidad: "1",
-  })
-
+    fecha_venta: fechaHoy,
+    total: "",
+  });
+  console.log(formData);
+  
   useEffect(() => {
-    fetchVentas()
-    fetchClientes()
-    fetchProductos()
-  }, [])
+    fetchVentas();
+    fetchClientes();
+    fetchProductos();
+  }, []);
 
   const handleOpenModal = () => {
     setFormData({
       cliente_id: "",
       producto_id: "",
       cantidad: "1",
-    })
-    setShowModal(true)
-    setError(null)
-    setSuccess(null)
-  }
+      fecha_venta: fechaHoy,
+      total: "", // lo calculás antes de enviar
+    });
+    setShowModal(true);
+    setError(null);
+    setSuccess(null);
+  };
 
   const handleCloseModal = () => {
-    setShowModal(false)
     setFormData({
       cliente_id: "",
       producto_id: "",
       cantidad: "1",
-    })
-    setError(null)
-  }
+      fecha_venta: fechaHoy,
+      total: "",
+    });
+    setShowModal(false);
+    setError(null);
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError(null)
-    setSuccess(null)
+    e.preventDefault();
 
-    const result = await createVenta(formData)
-    if (result.success) {
-      setSuccess("Venta registrada exitosamente")
-      setTimeout(() => {
-        handleCloseModal()
-        setSuccess(null)
-      }, 1500)
-    } else {
-      setError(result.error)
+    const producto = productos.find(
+      (p) => p.id === parseInt(formData.producto_id)
+    );
+    const precioUnitario = producto?.precio || 0;
+    const cantidad = parseInt(formData.cantidad);
+    const total = precioUnitario * cantidad;
+
+    const ventaCompleta = {
+      ...formData,
+      total,
+    };
+
+    try {
+      await axios.post("/ventas", ventaCompleta);
+      setSuccess("Venta registrada con éxito");
+      fetchVentas();
+      handleCloseModal();
+    } catch (err) {
+      setError("Error al registrar la venta");
+      console.error(err);
     }
-  }
+  };
 
   const handleExportar = async () => {
-    setError(null)
-    setSuccess(null)
-    const result = await exportarVentas(exportMes)
+    setError(null);
+    setSuccess(null);
+    const result = await exportarVentas(exportMes);
     if (result.success) {
-      setSuccess("Ventas exportadas exitosamente")
+      setSuccess("Ventas exportadas exitosamente");
       setTimeout(() => {
-        setShowExportModal(false)
-        setSuccess(null)
-      }, 1500)
+        setShowExportModal(false);
+        setSuccess(null);
+      }, 1500);
     } else {
-      setError(result.error)
+      setError(result.error);
     }
-  }
+  };
 
   const getClienteNombre = (clienteId) => {
-    const cliente = clientes.find((c) => c.id === clienteId)
-    return cliente?.nombre || "Desconocido"
-  }
+    const cliente = clientes.find((c) => c.id === clienteId);
+    return cliente?.nombre || "Desconocido";
+  };
 
   const getProductoNombre = (productoId) => {
-    const producto = productos.find((p) => p.id === productoId)
-    return producto?.nombre || "Desconocido"
-  }
+    const producto = productos.find((p) => p.id === productoId);
+    return producto?.nombre || "Desconocido";
+  };
 
   const filteredVentas = ventas.filter((venta) => {
-    const clienteNombre = getClienteNombre(venta.cliente_id).toLowerCase()
-    const productoNombre = getProductoNombre(venta.producto_id).toLowerCase()
-    const search = searchTerm.toLowerCase()
-    return clienteNombre.includes(search) || productoNombre.includes(search)
-  })
+    const clienteNombre = getClienteNombre(venta.cliente_id).toLowerCase();
+    const productoNombre = getProductoNombre(venta.producto_id).toLowerCase();
+    const search = searchTerm.toLowerCase();
+    return clienteNombre.includes(search) || productoNombre.includes(search);
+  });
 
-  const totalVentas = ventas.reduce((sum, venta) => sum + Number.parseFloat(venta.total || 0), 0)
+  const totalVentas = ventas.reduce(
+    (sum, venta) => sum + Number.parseFloat(venta.total || 0),
+    0
+  );
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -124,7 +149,9 @@ export default function Ventas() {
             <ShoppingCart className="w-8 h-8 text-cyan-500" />
             Ventas
           </h1>
-          <p className="text-muted-foreground">Registra y gestiona las ventas del gimnasio</p>
+          <p className="text-muted-foreground">
+            Registra y gestiona las ventas del gimnasio
+          </p>
         </div>
         <div className="flex gap-3">
           <button
@@ -164,7 +191,9 @@ export default function Ventas() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground mb-1">Total Ventas</p>
-              <p className="text-3xl font-bold text-foreground">{ventas.length}</p>
+              <p className="text-3xl font-bold text-foreground">
+                {ventas.length}
+              </p>
             </div>
             <ShoppingCart className="w-10 h-10 text-cyan-500" />
           </div>
@@ -172,8 +201,12 @@ export default function Ventas() {
         <div className="bg-card border border-border rounded-xl p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground mb-1">Ingresos Totales</p>
-              <p className="text-3xl font-bold text-green-500">${totalVentas.toLocaleString()}</p>
+              <p className="text-sm text-muted-foreground mb-1">
+                Ingresos Totales
+              </p>
+              <p className="text-3xl font-bold text-green-500">
+                ${totalVentas.toLocaleString()}
+              </p>
             </div>
             <DollarSign className="w-10 h-10 text-green-500" />
           </div>
@@ -183,7 +216,10 @@ export default function Ventas() {
             <div>
               <p className="text-sm text-muted-foreground mb-1">Promedio</p>
               <p className="text-3xl font-bold text-foreground">
-                ${ventas.length > 0 ? (totalVentas / ventas.length).toFixed(0) : 0}
+                $
+                {ventas.length > 0
+                  ? (totalVentas / ventas.length).toFixed(0)
+                  : 0}
               </p>
             </div>
             <TrendingUp className="w-10 h-10 text-primary-500" />
@@ -215,7 +251,9 @@ export default function Ventas() {
           <div className="text-center py-12">
             <ShoppingCart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">
-              {searchTerm ? "No se encontraron ventas" : "No hay ventas registradas"}
+              {searchTerm
+                ? "No se encontraron ventas"
+                : "No hay ventas registradas"}
             </p>
           </div>
         ) : (
@@ -223,11 +261,21 @@ export default function Ventas() {
             <table className="w-full">
               <thead className="bg-muted">
                 <tr>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Cliente</th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Producto</th>
-                  <th className="text-center py-4 px-6 text-sm font-semibold text-foreground">Cantidad</th>
-                  <th className="text-right py-4 px-6 text-sm font-semibold text-foreground">Total</th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Fecha</th>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">
+                    Cliente
+                  </th>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">
+                    Producto
+                  </th>
+                  <th className="text-center py-4 px-6 text-sm font-semibold text-foreground">
+                    Cantidad
+                  </th>
+                  <th className="text-right py-4 px-6 text-sm font-semibold text-foreground">
+                    Total
+                  </th>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">
+                    Fecha
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -240,13 +288,17 @@ export default function Ventas() {
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4 text-primary-500" />
-                        <span className="text-foreground">{getClienteNombre(venta.cliente_id)}</span>
+                        <span className="text-foreground">
+                          {getClienteNombre(venta.cliente_id)}
+                        </span>
                       </div>
                     </td>
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-2">
                         <Package className="w-4 h-4 text-purple-500" />
-                        <span className="text-foreground">{getProductoNombre(venta.producto_id)}</span>
+                        <span className="text-foreground">
+                          {getProductoNombre(venta.producto_id)}
+                        </span>
                       </div>
                     </td>
                     <td className="py-4 px-6 text-center">
@@ -276,11 +328,17 @@ export default function Ventas() {
       {/* Modal de nueva venta */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleCloseModal} />
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={handleCloseModal}
+          />
           <div className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md animate-slide-up">
             <div className="flex items-center justify-between p-6 border-b border-border">
               <h2 className="text-xl font-bold text-foreground">Nueva Venta</h2>
-              <button onClick={handleCloseModal} className="p-2 hover:bg-muted rounded-lg transition-smooth">
+              <button
+                onClick={handleCloseModal}
+                className="p-2 hover:bg-muted rounded-lg transition-smooth"
+              >
                 <X className="w-5 h-5 text-muted-foreground" />
               </button>
             </div>
@@ -300,7 +358,10 @@ export default function Ventas() {
               )}
 
               <div className="space-y-2">
-                <label htmlFor="cliente_id" className="block text-sm font-medium text-foreground">
+                <label
+                  htmlFor="cliente_id"
+                  className="block text-sm font-medium text-foreground"
+                >
                   Cliente *
                 </label>
                 <div className="relative">
@@ -308,7 +369,9 @@ export default function Ventas() {
                   <select
                     id="cliente_id"
                     value={formData.cliente_id}
-                    onChange={(e) => setFormData({ ...formData, cliente_id: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, cliente_id: e.target.value })
+                    }
                     className="w-full pl-10 pr-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-foreground transition-smooth appearance-none"
                     required
                   >
@@ -323,7 +386,10 @@ export default function Ventas() {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="producto_id" className="block text-sm font-medium text-foreground">
+                <label
+                  htmlFor="producto_id"
+                  className="block text-sm font-medium text-foreground"
+                >
                   Producto *
                 </label>
                 <div className="relative">
@@ -331,7 +397,9 @@ export default function Ventas() {
                   <select
                     id="producto_id"
                     value={formData.producto_id}
-                    onChange={(e) => setFormData({ ...formData, producto_id: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, producto_id: e.target.value })
+                    }
                     className="w-full pl-10 pr-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-foreground transition-smooth appearance-none"
                     required
                   >
@@ -346,7 +414,10 @@ export default function Ventas() {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="cantidad" className="block text-sm font-medium text-foreground">
+                <label
+                  htmlFor="cantidad"
+                  className="block text-sm font-medium text-foreground"
+                >
                   Cantidad *
                 </label>
                 <div className="relative">
@@ -356,7 +427,9 @@ export default function Ventas() {
                     type="number"
                     min="1"
                     value={formData.cantidad}
-                    onChange={(e) => setFormData({ ...formData, cantidad: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, cantidad: e.target.value })
+                    }
                     className="w-full pl-10 pr-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-foreground placeholder-muted-foreground transition-smooth"
                     placeholder="1"
                     required
@@ -387,10 +460,15 @@ export default function Ventas() {
       {/* Modal de exportación */}
       {showExportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowExportModal(false)} />
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowExportModal(false)}
+          />
           <div className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md animate-slide-up">
             <div className="flex items-center justify-between p-6 border-b border-border">
-              <h2 className="text-xl font-bold text-foreground">Exportar Ventas</h2>
+              <h2 className="text-xl font-bold text-foreground">
+                Exportar Ventas
+              </h2>
               <button
                 onClick={() => setShowExportModal(false)}
                 className="p-2 hover:bg-muted rounded-lg transition-smooth"
@@ -414,7 +492,10 @@ export default function Ventas() {
               )}
 
               <div className="space-y-2">
-                <label htmlFor="exportMes" className="block text-sm font-medium text-foreground">
+                <label
+                  htmlFor="exportMes"
+                  className="block text-sm font-medium text-foreground"
+                >
                   Seleccionar Mes
                 </label>
                 <input
@@ -446,5 +527,5 @@ export default function Ventas() {
         </div>
       )}
     </div>
-  )
+  );
 }
