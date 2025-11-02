@@ -26,7 +26,6 @@ export default function Ventas() {
   const { productos, fetchProductos } = useProductosStore();
   console.log(productos);
   console.log(clientes);
-  
 
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
@@ -42,10 +41,9 @@ export default function Ventas() {
     producto_id: "",
     cantidad: "1",
     fecha_venta: fechaHoy,
-    total: "",
   });
   console.log(formData);
-  
+
   useEffect(() => {
     fetchVentas();
     fetchClientes();
@@ -58,7 +56,6 @@ export default function Ventas() {
       producto_id: "",
       cantidad: "1",
       fecha_venta: fechaHoy,
-      total: "", // lo calculás antes de enviar
     });
     setShowModal(true);
     setError(null);
@@ -71,37 +68,53 @@ export default function Ventas() {
       producto_id: "",
       cantidad: "1",
       fecha_venta: fechaHoy,
-      total: "",
     });
     setShowModal(false);
     setError(null);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+ function calcularTotal(producto_id, cantidad, productos) {
+  const producto = productos.find((p) => p.id === parseInt(producto_id))
+  const precioUnitario = producto?.precio || 0
+  return precioUnitario * parseInt(cantidad)
+}
 
-    const producto = productos.find(
-      (p) => p.id === parseInt(formData.producto_id)
-    );
-    const precioUnitario = producto?.precio || 0;
-    const cantidad = parseInt(formData.cantidad);
-    const total = precioUnitario * cantidad;
+const handleSubmit = async (e) => {
+  e.preventDefault()
 
-    const ventaCompleta = {
-      ...formData,
-      total,
-    };
+  const cantidad = parseInt(formData.cantidad)
+  const total = calcularTotal(formData.producto_id, cantidad, productos)
 
-    try {
-      await axios.post("/ventas", ventaCompleta);
-      setSuccess("Venta registrada con éxito");
-      fetchVentas();
-      handleCloseModal();
-    } catch (err) {
-      setError("Error al registrar la venta");
-      console.error(err);
-    }
-  };
+  if (
+    !formData.cliente_id ||
+    !formData.producto_id ||
+    !cantidad ||
+    !formData.fecha_venta ||
+    !total ||
+    isNaN(total)
+  ) {
+    setError('❌ Faltan datos válidos para registrar la venta')
+    return
+  }
+
+  const venta = {
+    cliente_id: parseInt(formData.cliente_id),
+    producto_id: parseInt(formData.producto_id),
+    cantidad,
+    fecha_venta: formData.fecha_venta,
+    total,
+  }
+
+  const resultado = await store.createVenta(venta)
+
+  if (resultado.success) {
+    setSuccess('✅ Venta registrada con éxito')
+    fetchVentas()
+    handleCloseModal()
+  } else {
+    setError(resultado.error)
+  }
+}
 
   const handleExportar = async () => {
     setError(null);
