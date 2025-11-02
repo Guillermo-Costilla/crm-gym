@@ -105,7 +105,7 @@ const handleSubmit = async (e) => {
     total,
   }
 
-  const resultado = await store.createVenta(venta)
+  const resultado = await createVenta(venta)
 
   if (resultado.success) {
     setSuccess('✅ Venta registrada con éxito')
