@@ -407,7 +407,7 @@ export default function Pagos() {
                 <select
                   id="metodo"
                   value={formData.metodo}
-                  onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, metodo: e.target.value })}
                   className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-foreground transition-smooth appearance-none"
                   required
                 >
