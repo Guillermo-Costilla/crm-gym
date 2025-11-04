@@ -378,8 +378,8 @@ export default function Pagos() {
                   className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-foreground transition-smooth appearance-none"
                   required
                 >
-                  <option value="mensual">Mensual</option>
-                  <option value="anual">Anual</option>
+                  <option value="Mensual">Mensual</option>
+                  <option value="Anual">Anual</option>
                 </select>
               </div>
 
