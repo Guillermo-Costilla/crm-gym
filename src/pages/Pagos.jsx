@@ -74,6 +74,8 @@ export default function Pagos() {
     e.preventDefault()
     setError(null)
     setSuccess(null)
+    
+    console.log("📦 formData:", formData)
 
     const result = await createPago(formData)
     if (result.success) {
