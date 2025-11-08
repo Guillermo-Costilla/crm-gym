@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react"
-import { useProductosStore } from "../store/productosStore"
+import { useEffect, useState } from "react";
+import { useProductosStore } from "../store/productosStore";
 import {
   Package,
   Search,
@@ -13,97 +13,110 @@ import {
   AlertCircle,
   CheckCircle,
   Tag,
-} from "lucide-react"
+} from "lucide-react";
 
 export default function Productos() {
-  const { productos, loading, fetchProductos, createProducto, updateProducto, deleteProducto } = useProductosStore()
+  const {
+    productos,
+    loading,
+    fetchProductos,
+    createProducto,
+    updateProducto,
+    deleteProducto,
+  } = useProductosStore();
 
-  const [searchTerm, setSearchTerm] = useState("")
-  const [showModal, setShowModal] = useState(false)
-  const [editingProducto, setEditingProducto] = useState(null)
-  const [error, setError] = useState(null)
-  const [success, setSuccess] = useState(null)
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [editingProducto, setEditingProducto] = useState(null);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
 
   const [formData, setFormData] = useState({
     nombre: "",
-    descripcion: "",
+    categoria: "",
     precio: "",
     stock: "",
-  })
+  });
 
   useEffect(() => {
-    fetchProductos()
-  }, [fetchProductos])
+    fetchProductos();
+  }, [fetchProductos]);
 
   const handleOpenModal = (producto = null) => {
     if (producto) {
-      setEditingProducto(producto)
+      setEditingProducto(producto);
       setFormData({
         nombre: producto.nombre,
         descripcion: producto.descripcion || "",
         precio: producto.precio,
         stock: producto.stock,
-      })
+      });
     } else {
-      setEditingProducto(null)
+      setEditingProducto(null);
       setFormData({
         nombre: "",
-        descripcion: "",
+        categoria: "",
         precio: "",
         stock: "",
-      })
+      });
     }
-    setShowModal(true)
-    setError(null)
-    setSuccess(null)
-  }
+    setShowModal(true);
+    setError(null);
+    setSuccess(null);
+  };
 
   const handleCloseModal = () => {
-    setShowModal(false)
-    setEditingProducto(null)
+    setShowModal(false);
+    setEditingProducto(null);
     setFormData({
       nombre: "",
-      descripcion: "",
+      categoria: "",
       precio: "",
       stock: "",
-    })
-    setError(null)
-  }
+    });
+    setError(null);
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError(null)
-    setSuccess(null)
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
 
-    const result = editingProducto ? await updateProducto(editingProducto.id, formData) : await createProducto(formData)
+    const result = editingProducto
+      ? await updateProducto(editingProducto.id, formData)
+      : await createProducto(formData);
 
     if (result.success) {
-      setSuccess(editingProducto ? "Producto actualizado exitosamente" : "Producto creado exitosamente")
+      setSuccess(
+        editingProducto
+          ? "Producto actualizado exitosamente"
+          : "Producto creado exitosamente"
+      );
       setTimeout(() => {
-        handleCloseModal()
-        setSuccess(null)
-      }, 1500)
+        handleCloseModal();
+        setSuccess(null);
+      }, 1500);
     } else {
-      setError(result.error)
+      setError(result.error);
     }
-  }
+  };
 
   const handleDelete = async (id) => {
-    if (!confirm("¿Estás seguro de eliminar este producto?")) return
+    if (!confirm("¿Estás seguro de eliminar este producto?")) return;
 
-    const result = await deleteProducto(id)
+    const result = await deleteProducto(id);
     if (result.success) {
-      setSuccess("Producto eliminado exitosamente")
-      setTimeout(() => setSuccess(null), 3000)
+      setSuccess("Producto eliminado exitosamente");
+      setTimeout(() => setSuccess(null), 3000);
     } else {
-      setError(result.error)
-      setTimeout(() => setError(null), 3000)
+      setError(result.error);
+      setTimeout(() => setError(null), 3000);
     }
-  }
+  };
 
   const filteredProductos = productos.filter((producto) =>
-    producto.nombre.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+    producto.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -114,7 +127,9 @@ export default function Productos() {
             <Package className="w-8 h-8 text-purple-500" />
             Productos
           </h1>
-          <p className="text-muted-foreground">Gestiona el inventario de productos del gimnasio</p>
+          <p className="text-muted-foreground">
+            Gestiona el inventario de productos del gimnasio
+          </p>
         </div>
         <button
           onClick={() => handleOpenModal()}
@@ -162,7 +177,9 @@ export default function Productos() {
         <div className="bg-card border border-border rounded-xl p-12 text-center">
           <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <p className="text-muted-foreground">
-            {searchTerm ? "No se encontraron productos" : "No hay productos registrados"}
+            {searchTerm
+              ? "No se encontraron productos"
+              : "No hay productos registrados"}
           </p>
         </div>
       ) : (
@@ -195,8 +212,14 @@ export default function Productos() {
                 </div>
               </div>
 
-              <h3 className="text-lg font-bold text-foreground mb-2">{producto.nombre}</h3>
-              {producto.descripcion && <p className="text-sm text-muted-foreground mb-4">{producto.descripcion}</p>}
+              <h3 className="text-lg font-bold text-foreground mb-2">
+                {producto.nombre}
+              </h3>
+              {producto.descripcion && (
+                <p className="text-sm text-muted-foreground mb-4">
+                  {producto.descripcion}
+                </p>
+              )}
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -204,7 +227,9 @@ export default function Productos() {
                     <DollarSign className="w-4 h-4" />
                     Precio
                   </span>
-                  <span className="text-lg font-bold text-green-500">${producto.precio}</span>
+                  <span className="text-lg font-bold text-green-500">
+                    ${producto.precio}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground flex items-center gap-2">
@@ -216,8 +241,8 @@ export default function Productos() {
                       producto.stock > 10
                         ? "bg-green-500/10 text-green-500"
                         : producto.stock > 0
-                          ? "bg-yellow-500/10 text-yellow-500"
-                          : "bg-red-500/10 text-red-500"
+                        ? "bg-yellow-500/10 text-yellow-500"
+                        : "bg-red-500/10 text-red-500"
                     }`}
                   >
                     {producto.stock} unidades
@@ -232,13 +257,19 @@ export default function Productos() {
       {/* Modal de crear/editar */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleCloseModal} />
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={handleCloseModal}
+          />
           <div className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md animate-slide-up">
             <div className="flex items-center justify-between p-6 border-b border-border">
               <h2 className="text-xl font-bold text-foreground">
                 {editingProducto ? "Editar Producto" : "Nuevo Producto"}
               </h2>
-              <button onClick={handleCloseModal} className="p-2 hover:bg-muted rounded-lg transition-smooth">
+              <button
+                onClick={handleCloseModal}
+                className="p-2 hover:bg-muted rounded-lg transition-smooth"
+              >
                 <X className="w-5 h-5 text-muted-foreground" />
               </button>
             </div>
@@ -258,7 +289,10 @@ export default function Productos() {
               )}
 
               <div className="space-y-2">
-                <label htmlFor="nombre" className="block text-sm font-medium text-foreground">
+                <label
+                  htmlFor="nombre"
+                  className="block text-sm font-medium text-foreground"
+                >
                   Nombre del Producto *
                 </label>
                 <div className="relative">
@@ -267,7 +301,9 @@ export default function Productos() {
                     id="nombre"
                     type="text"
                     value={formData.nombre}
-                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, nombre: e.target.value })
+                    }
                     className="w-full pl-10 pr-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-foreground placeholder-muted-foreground transition-smooth"
                     placeholder="Proteína Whey"
                     required
@@ -276,15 +312,20 @@ export default function Productos() {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="descripcion" className="block text-sm font-medium text-foreground">
-                  Descripción
+                <label
+                  htmlFor="descripcion"
+                  className="block text-sm font-medium text-foreground"
+                >
+                  Categoria
                 </label>
                 <div className="relative">
                   <FileText className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
                   <textarea
-                    id="descripcion"
-                    value={formData.descripcion}
-                    onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
+                    id="categoria"
+                    value={formData.categoria}
+                    onChange={(e) =>
+                      setFormData({ ...formData, categoria: e.target.value })
+                    }
                     className="w-full pl-10 pr-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-foreground placeholder-muted-foreground transition-smooth resize-none"
                     placeholder="Descripción del producto..."
                     rows={3}
@@ -294,7 +335,10 @@ export default function Productos() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label htmlFor="precio" className="block text-sm font-medium text-foreground">
+                  <label
+                    htmlFor="precio"
+                    className="block text-sm font-medium text-foreground"
+                  >
                     Precio *
                   </label>
                   <div className="relative">
@@ -304,7 +348,9 @@ export default function Productos() {
                       type="number"
                       step="0.01"
                       value={formData.precio}
-                      onChange={(e) => setFormData({ ...formData, precio: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, precio: e.target.value })
+                      }
                       className="w-full pl-10 pr-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-foreground placeholder-muted-foreground transition-smooth"
                       placeholder="0.00"
                       required
@@ -313,7 +359,10 @@ export default function Productos() {
                 </div>
 
                 <div className="space-y-2">
-                  <label htmlFor="stock" className="block text-sm font-medium text-foreground">
+                  <label
+                    htmlFor="stock"
+                    className="block text-sm font-medium text-foreground"
+                  >
                     Stock *
                   </label>
                   <div className="relative">
@@ -322,7 +371,9 @@ export default function Productos() {
                       id="stock"
                       type="number"
                       value={formData.stock}
-                      onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, stock: e.target.value })
+                      }
                       className="w-full pl-10 pr-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-foreground placeholder-muted-foreground transition-smooth"
                       placeholder="0"
                       required
@@ -351,5 +402,5 @@ export default function Productos() {
         </div>
       )}
     </div>
-  )
+  );
 }

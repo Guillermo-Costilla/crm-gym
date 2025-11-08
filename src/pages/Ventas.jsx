@@ -24,8 +24,6 @@ export default function Ventas() {
     useVentasStore();
   const { clientes, fetchClientes } = useClientesStore();
   const { productos, fetchProductos } = useProductosStore();
-  console.log(productos);
-  console.log(clientes);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
@@ -84,6 +82,7 @@ const handleSubmit = async (e) => {
 
   const cantidad = parseInt(formData.cantidad)
   const total = calcularTotal(formData.producto_id, cantidad, productos)
+  console.log("Cantidad:", cantidad, "Total:", total)
 
   if (
     !formData.cliente_id ||
@@ -105,7 +104,11 @@ const handleSubmit = async (e) => {
     total,
   }
 
+  console.log("Datos de la venta a crear:", venta)
+
   const resultado = await createVenta(venta)
+
+  console.log("Resultado de la creación de venta:", resultado)
 
   if (resultado.success) {
     setSuccess('✅ Venta registrada con éxito')

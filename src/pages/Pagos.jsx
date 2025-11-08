@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react"
-import { usePagosStore } from "../store/pagosStore"
-import { useClientesStore } from "../store/clientesStore"
-import { format } from "date-fns"
+import { useEffect, useState } from "react";
+import { usePagosStore } from "../store/pagosStore";
+import { useClientesStore } from "../store/clientesStore";
+import toast from "react-hot-toast";
+import { format } from "date-fns";
 import {
   CreditCard,
   Search,
@@ -15,19 +16,28 @@ import {
   Clock,
   Filter,
   Download,
-} from "lucide-react"
+} from "lucide-react";
 
 export default function Pagos() {
-  const { pagos, loading, fetchPagos, createPago, exportarPagos } = usePagosStore()
-  const { clientes, fetchClientes } = useClientesStore()
+  const {
+    pagos,
+    loading,
+    fetchPagos,
+    createPago,
+    exportarPagos,
+    marcarComoPagado,
+    getEstadoPagoCliente,
+  } = usePagosStore();
+  const { clientes, fetchClientes, getClienteById } = useClientesStore();
 
-  const [searchTerm, setSearchTerm] = useState("")
-  const [filterStatus, setFilterStatus] = useState("todos")
-  const [showModal, setShowModal] = useState(false)
-  const [showExportModal, setShowExportModal] = useState(false)
-  const [error, setError] = useState(null)
-  const [success, setSuccess] = useState(null)
-  const [exportMes, setExportMes] = useState(format(new Date(), "yyyy-MM"))
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("todos");
+  const [showModal, setShowModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [exportMes, setExportMes] = useState(format(new Date(), "yyyy-MM"));
+  const [accionEnCurso, setAccionEnCurso] = useState(null);
 
   const [formData, setFormData] = useState({
     cliente_id: "",
@@ -35,13 +45,13 @@ export default function Pagos() {
     tipo: "Mensual",
     fecha_pago: format(new Date(), "yyyy-MM-dd"),
     pagado: 1,
-    metodo: "efectivo"
-  })
+    metodo: "efectivo",
+  });
 
   useEffect(() => {
-    fetchPagos()
-    fetchClientes()
-  }, [])
+    fetchPagos();
+    fetchClientes();
+  }, []);
 
   const handleOpenModal = () => {
     setFormData({
@@ -50,77 +60,82 @@ export default function Pagos() {
       tipo: "Mensual",
       fecha_pago: format(new Date(), "yyyy-MM-dd"),
       pagado: 1,
-      metodo: "efectivo"
-    })
-    setShowModal(true)
-    setError(null)
-    setSuccess(null)
-  }
+      metodo: "efectivo",
+    });
+    setShowModal(true);
+    setError(null);
+    setSuccess(null);
+  };
 
   const handleCloseModal = () => {
-    setShowModal(false)
+    setShowModal(false);
     setFormData({
       cliente_id: "",
       monto: "",
       tipo: "Mensual",
       fecha_pago: format(new Date(), "yyyy-MM-dd"),
       pagado: 1,
-      metodo: "efectivo"
-    })
-    setError(null)
-  }
+      metodo: "efectivo",
+    });
+    setError(null);
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError(null)
-    setSuccess(null)
-    
-    console.log("📦 formData:", formData)
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
 
-    const result = await createPago(formData)
+    const result = await createPago(formData);
     if (result.success) {
-      setSuccess("Pago registrado exitosamente")
+      setSuccess("Pago registrado exitosamente");
       setTimeout(() => {
-        handleCloseModal()
-        setSuccess(null)
-      }, 1500)
+        handleCloseModal();
+        setSuccess(null);
+      }, 1500);
     } else {
-      setError(result.error)
+      setError(result.error);
     }
-  }
+  };
 
   const handleExportar = async () => {
-    setError(null)
-    setSuccess(null)
-    const result = await exportarPagos(exportMes)
+    setError(null);
+    setSuccess(null);
+    const result = await exportarPagos(exportMes);
     if (result.success) {
-      setSuccess("Pagos exportados exitosamente")
+      setSuccess("Pagos exportados exitosamente");
       setTimeout(() => {
-        setShowExportModal(false)
-        setSuccess(null)
-      }, 1500)
+        setShowExportModal(false);
+        setSuccess(null);
+      }, 1500);
     } else {
-      setError(result.error)
+      setError(result.error);
     }
-  }
+  };
 
   const getClienteNombre = (clienteId) => {
-    const cliente = clientes.find((c) => c.id === clienteId)
-    return cliente?.nombre || "Desconocido"
-  }
+    const cliente = clientes.find((c) => c.id === clienteId);
+    return cliente?.nombre || "Desconocido";
+  };
 
   const filteredPagos = pagos.filter((pago) => {
-    const clienteNombre = getClienteNombre(pago.cliente_id).toLowerCase()
-    const matchesSearch = clienteNombre.includes(searchTerm.toLowerCase())
+    const clienteNombre = getClienteNombre(pago.cliente_id).toLowerCase();
+    const matchesSearch = clienteNombre.includes(searchTerm.toLowerCase());
     const matchesFilter =
       filterStatus === "todos" ||
       (filterStatus === "pagado" && pago.pagado) ||
-      (filterStatus === "pendiente" && !pago.pagado)
-    return matchesSearch && matchesFilter
-  })
+      (filterStatus === "pendiente" && !pago.pagado);
+    return matchesSearch && matchesFilter;
+  });
 
-  const totalPagos = pagos.filter((p) => p.pagado).reduce((sum, pago) => sum + Number.parseFloat(pago.monto || 0), 0)
-  const pagosPendientes = pagos.filter((p) => !p.pagado).length
+  const hoy = new Date();
+  const mesActual = hoy.getMonth(); // noviembre = 10
+  const añoActual = hoy.getFullYear();
+
+  const totalPagosDelMes = usePagosStore((state) =>
+    state.getTotalPagosDelMes(mesActual, añoActual)
+  );
+
+  const pagosPendientes = pagos.filter((p) => !p.pagado).length;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -131,7 +146,9 @@ export default function Pagos() {
             <CreditCard className="w-8 h-8 text-green-500" />
             Pagos
           </h1>
-          <p className="text-muted-foreground">Gestiona los pagos y membresías del gimnasio</p>
+          <p className="text-muted-foreground">
+            Gestiona los pagos y membresías del gimnasio
+          </p>
         </div>
         <div className="flex gap-3">
           <button
@@ -171,7 +188,9 @@ export default function Pagos() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground mb-1">Total Pagos</p>
-              <p className="text-3xl font-bold text-foreground">{pagos.length}</p>
+              <p className="text-3xl font-bold text-foreground">
+                {pagos.length}
+              </p>
             </div>
             <CreditCard className="w-10 h-10 text-green-500" />
           </div>
@@ -179,8 +198,15 @@ export default function Pagos() {
         <div className="bg-card border border-border rounded-xl p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground mb-1">Ingresos Totales</p>
-              <p className="text-3xl font-bold text-green-500">${totalPagos.toLocaleString()}</p>
+              <p className="text-sm text-muted-foreground mb-1">
+                Ingresos de{" "}
+                {hoy
+                  .toLocaleString("es-AR", { month: "long" })
+                  .replace(/^./, (c) => c.toUpperCase())}
+              </p>
+              <p className="text-3xl font-bold text-green-500">
+                ${totalPagosDelMes.toLocaleString()}
+              </p>
             </div>
             <DollarSign className="w-10 h-10 text-green-500" />
           </div>
@@ -189,7 +215,9 @@ export default function Pagos() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground mb-1">Pendientes</p>
-              <p className="text-3xl font-bold text-yellow-500">{pagosPendientes}</p>
+              <p className="text-3xl font-bold text-yellow-500">
+                {pagosPendientes}
+              </p>
             </div>
             <Clock className="w-10 h-10 text-yellow-500" />
           </div>
@@ -234,7 +262,9 @@ export default function Pagos() {
           <div className="text-center py-12">
             <CreditCard className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">
-              {searchTerm ? "No se encontraron pagos" : "No hay pagos registrados"}
+              {searchTerm
+                ? "No se encontraron pagos"
+                : "No hay pagos registrados"}
             </p>
           </div>
         ) : (
@@ -242,11 +272,24 @@ export default function Pagos() {
             <table className="w-full">
               <thead className="bg-muted">
                 <tr>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Cliente</th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Tipo</th>
-                  <th className="text-right py-4 px-6 text-sm font-semibold text-foreground">Monto</th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Fecha</th>
-                  <th className="text-center py-4 px-6 text-sm font-semibold text-foreground">Estado</th>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">
+                    Cliente
+                  </th>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">
+                    Tipo
+                  </th>
+                  <th className="text-right py-4 px-6 text-sm font-semibold text-foreground">
+                    Monto
+                  </th>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">
+                    Fecha
+                  </th>
+                  <th className="text-center py-4 px-6 text-sm font-semibold text-foreground">
+                    Estado
+                  </th>
+                  <th className="text-center py-4 px-6 text-sm font-semibold text-foreground">
+                    Vencimiento
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -259,7 +302,9 @@ export default function Pagos() {
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4 text-primary-500" />
-                        <span className="text-foreground">{getClienteNombre(pago.cliente_id)}</span>
+                        <span className="text-foreground">
+                          {getClienteNombre(pago.cliente_id)}
+                        </span>
                       </div>
                     </td>
                     <td className="py-4 px-6">
@@ -285,11 +330,58 @@ export default function Pagos() {
                           Pagado
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-500/10 text-yellow-500 rounded-full text-sm font-semibold">
-                          <Clock className="w-4 h-4" />
-                          Pendiente
-                        </span>
+                        <div className="space-y-1">
+                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-500/10 text-yellow-500 rounded-full text-sm font-semibold">
+                            <Clock className="w-4 h-4" />
+                            Pendiente
+                          </span>
+                          <button
+                            onClick={async () => {
+                              setAccionEnCurso(pago.id); // 👈 variable de estado para spinner
+                              const result = await marcarComoPagado(pago.id);
+                              setAccionEnCurso(null);
+                              if (result.success) {
+                                toast.success("✅ Pago marcado como pagado");
+                              } else {
+                                toast.error("❌ " + result.error);
+                              }
+                            }}
+                            disabled={accionEnCurso === pago.id}
+                            className="text-xs text-green-600 hover:underline mt-1 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
+                          >
+                            {accionEnCurso === pago.id ? (
+                              <div className="w-3 h-3 border-2 border-green-500/30 border-t-green-500 rounded-full animate-spin" />
+                            ) : (
+                              <>
+                                <CheckCircle className="w-3 h-3" />
+                                Marcar como pagado
+                              </>
+                            )}
+                          </button>
+                        </div>
                       )}
+                    </td>
+                    <td className="py-4 px-6 text-center">
+                      {(() => {
+                        const cliente = getClienteById(pago.cliente_id);
+                        const estado = getEstadoPagoCliente(cliente);
+                        console.log(
+                          "cliente.fecha_registro:",
+                          cliente?.fecha_registro
+                        );
+
+                        return (
+                          <span className={`text-${estado.color}-500`}>
+                            {estado.estado}
+                            {estado.dias > 0 &&
+                              ` (${estado.dias} días ${
+                                estado.estado === "Vencido"
+                                  ? "de atraso"
+                                  : "restantes"
+                              })`}
+                          </span>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))}
@@ -302,11 +394,17 @@ export default function Pagos() {
       {/* Modal de nuevo pago */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleCloseModal} />
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={handleCloseModal}
+          />
           <div className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md animate-slide-up">
             <div className="flex items-center justify-between p-6 border-b border-border">
               <h2 className="text-xl font-bold text-foreground">Nuevo Pago</h2>
-              <button onClick={handleCloseModal} className="p-2 hover:bg-muted rounded-lg transition-smooth">
+              <button
+                onClick={handleCloseModal}
+                className="p-2 hover:bg-muted rounded-lg transition-smooth"
+              >
                 <X className="w-5 h-5 text-muted-foreground" />
               </button>
             </div>
@@ -326,7 +424,10 @@ export default function Pagos() {
               )}
 
               <div className="space-y-2">
-                <label htmlFor="cliente_id" className="block text-sm font-medium text-foreground">
+                <label
+                  htmlFor="cliente_id"
+                  className="block text-sm font-medium text-foreground"
+                >
                   Cliente *
                 </label>
                 <div className="relative">
@@ -334,7 +435,9 @@ export default function Pagos() {
                   <select
                     id="cliente_id"
                     value={formData.cliente_id}
-                    onChange={(e) => setFormData({ ...formData, cliente_id: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, cliente_id: e.target.value })
+                    }
                     className="w-full pl-10 pr-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-foreground transition-smooth appearance-none"
                     required
                   >
@@ -349,7 +452,10 @@ export default function Pagos() {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="monto" className="block text-sm font-medium text-foreground">
+                <label
+                  htmlFor="monto"
+                  className="block text-sm font-medium text-foreground"
+                >
                   Monto *
                 </label>
                 <div className="relative">
@@ -359,7 +465,9 @@ export default function Pagos() {
                     type="number"
                     step="0.01"
                     value={formData.monto}
-                    onChange={(e) => setFormData({ ...formData, monto: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, monto: e.target.value })
+                    }
                     className="w-full pl-10 pr-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-foreground placeholder-muted-foreground transition-smooth"
                     placeholder="0.00"
                     required
@@ -368,13 +476,18 @@ export default function Pagos() {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="tipo" className="block text-sm font-medium text-foreground">
+                <label
+                  htmlFor="tipo"
+                  className="block text-sm font-medium text-foreground"
+                >
                   Tipo de Pago *
                 </label>
                 <select
                   id="tipo"
                   value={formData.tipo}
-                  onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, tipo: e.target.value })
+                  }
                   className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-foreground transition-smooth appearance-none"
                   required
                 >
@@ -384,7 +497,10 @@ export default function Pagos() {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="fecha_pago" className="block text-sm font-medium text-foreground">
+                <label
+                  htmlFor="fecha_pago"
+                  className="block text-sm font-medium text-foreground"
+                >
                   Fecha de Pago *
                 </label>
                 <div className="relative">
@@ -393,7 +509,9 @@ export default function Pagos() {
                     id="fecha_pago"
                     type="date"
                     value={formData.fecha_pago}
-                    onChange={(e) => setFormData({ ...formData, fecha_pago: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, fecha_pago: e.target.value })
+                    }
                     className="w-full pl-10 pr-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-foreground transition-smooth"
                     required
                   />
@@ -401,13 +519,18 @@ export default function Pagos() {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="metodo" className="block text-sm font-medium text-foreground">
+                <label
+                  htmlFor="metodo"
+                  className="block text-sm font-medium text-foreground"
+                >
                   Método de Pago *
                 </label>
                 <select
                   id="metodo"
                   value={formData.metodo}
-                  onChange={(e) => setFormData({ ...formData, metodo: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, metodo: e.target.value })
+                  }
                   className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-foreground transition-smooth appearance-none"
                   required
                 >
@@ -422,10 +545,15 @@ export default function Pagos() {
                   id="pagado"
                   type="checkbox"
                   checked={formData.pagado}
-                  onChange={(e) => setFormData({ ...formData, pagado: e.target.checked })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, pagado: e.target.checked })
+                  }
                   className="w-5 h-5 rounded border-border text-green-500 focus:ring-2 focus:ring-green-500"
                 />
-                <label htmlFor="pagado" className="text-sm font-medium text-foreground cursor-pointer">
+                <label
+                  htmlFor="pagado"
+                  className="text-sm font-medium text-foreground cursor-pointer"
+                >
                   Marcar como pagado
                 </label>
               </div>
@@ -453,10 +581,15 @@ export default function Pagos() {
       {/* Modal de exportación */}
       {showExportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowExportModal(false)} />
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowExportModal(false)}
+          />
           <div className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md animate-slide-up">
             <div className="flex items-center justify-between p-6 border-b border-border">
-              <h2 className="text-xl font-bold text-foreground">Exportar Pagos</h2>
+              <h2 className="text-xl font-bold text-foreground">
+                Exportar Pagos
+              </h2>
               <button
                 onClick={() => setShowExportModal(false)}
                 className="p-2 hover:bg-muted rounded-lg transition-smooth"
@@ -480,7 +613,10 @@ export default function Pagos() {
               )}
 
               <div className="space-y-2">
-                <label htmlFor="exportMes" className="block text-sm font-medium text-foreground">
+                <label
+                  htmlFor="exportMes"
+                  className="block text-sm font-medium text-foreground"
+                >
                   Seleccionar Mes
                 </label>
                 <input
@@ -512,5 +648,5 @@ export default function Pagos() {
         </div>
       )}
     </div>
-  )
+  );
 }

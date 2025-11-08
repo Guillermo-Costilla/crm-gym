@@ -1,39 +1,46 @@
-import { useEffect, useState } from "react"
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
-import { useAuthStore } from "./store/authStore"
-import { useThemeStore } from "./store/themeStore"
-import Login from "./pages/Login"
-import Register from "./pages/Register"
-import Dashboard from "./pages/Dashboard"
-import Clientes from "./pages/Clientes"
-import Productos from "./pages/Productos"
-import Ventas from "./pages/Ventas"
-import Pagos from "./pages/Pagos"
-import Asistencias from "./pages/Asistencias"
-import Layout from "./components/Layout"
+import { useEffect, useState } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { useAuthStore } from "./store/authStore";
+import { useThemeStore } from "./store/themeStore";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
+import Clientes from "./pages/Clientes";
+import Productos from "./pages/Productos";
+import Ventas from "./pages/Ventas";
+import Pagos from "./pages/Pagos";
+import Asistencias from "./pages/Asistencias";
+import Layout from "./components/Layout";
+import { Toaster } from "react-hot-toast";
+import RegistroAsistencia from "./pages/RegistroAsistencia";
 
 function ProtectedRoute({ children }) {
-  const { token } = useAuthStore()
-  return token ? children : <Navigate to="/login" replace />
+  const { token } = useAuthStore();
+  return token ? children : <Navigate to="/login" replace />;
 }
 
 function App() {
-  const { theme } = useThemeStore()
-  const { initialize, isInitialized } = useAuthStore()
-  const [loading, setLoading] = useState(true)
+  const { theme } = useThemeStore();
+  const { initialize, isInitialized } = useAuthStore();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    document.documentElement.classList.remove("dark", "light")
-    document.documentElement.classList.add(theme)
-  }, [theme])
+    document.documentElement.classList.remove("dark", "light");
+    document.documentElement.classList.add(theme);
+  }, [theme]);
 
   useEffect(() => {
     const initAuth = async () => {
-      await initialize()
-      setLoading(false)
-    }
-    initAuth()
-  }, [initialize])
+      await initialize();
+      setLoading(false);
+    };
+    initAuth();
+  }, [initialize]);
 
   if (loading || !isInitialized) {
     return (
@@ -43,14 +50,16 @@ function App() {
           <p className="text-muted-foreground">Cargando...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <Router>
+      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/registrar-asistencia" element={<RegistroAsistencia />} />
         <Route
           path="/"
           element={
@@ -68,7 +77,7 @@ function App() {
         </Route>
       </Routes>
     </Router>
-  )
+  );
 }
 
-export default App
+export default App;

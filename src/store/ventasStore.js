@@ -72,7 +72,10 @@ export const useVentasStore = create((set, get) => ({
 
   createVenta: async (data) => {
     try {
+      console.log("Creando venta con datos:", data)
       const response = await api.post("/ventas", data)
+      console.log("Venta creada:", response.data)
+      // Refrescar la lista de ventas después de crear una nueva
       await get().fetchVentas()
       return { success: true, data: response.data }
     } catch (error) {

@@ -457,7 +457,8 @@ export default function Clientes() {
                       setFormData({ ...formData, telefono: e.target.value })
                     }
                     className="w-full pl-10 pr-4 py-3 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-foreground placeholder-muted-foreground transition-smooth"
-                    placeholder="3815551234"
+                    placeholder="+543815551234"
+                    required
                   />
                 </div>
               </div>

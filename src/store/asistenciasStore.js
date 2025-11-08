@@ -6,9 +6,9 @@ export const useAsistenciasStore = create((set) => ({
   loading: false,
   error: null,
 
-  registrarAsistencia: async (dni) => {
+  registrarAsistencia: async (asistencia) => {
     try {
-      const response = await api.post("/asistencias/registro", { dni })
+      const response = await api.post("/asistencias/registro", asistencia )
       return { success: true, data: response.data }
     } catch (error) {
       return { success: false, error: error.response?.data?.error || "Error al registrar asistencia" }

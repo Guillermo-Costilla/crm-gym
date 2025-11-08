@@ -121,8 +121,10 @@ input[type="text"],
 input[type="email"],
 input[type="password"],
 input[type="number"],
+input[type="tel"],
 input[type="date"],
 input[type="month"],
+input[type="dni"],
 select,
 textarea {
   color: var(--color-foreground);
