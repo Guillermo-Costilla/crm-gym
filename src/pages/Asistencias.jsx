@@ -19,7 +19,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 
 export default function Asistencias() {
-  const { asistencias, loading, getAsistenciasPorRango } = useAsistenciasStore()
+  const { asistencias, loading, getAsistencias } = useAsistenciasStore()
   const { exportarPagos } = usePagosStore()
   const { exportarVentas } = useVentasStore()
 
@@ -31,15 +31,16 @@ export default function Asistencias() {
   const [exportando, setExportando] = useState(false)
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        await getAsistenciasPorRango(fechaInicio, fechaFin)
-      } catch (err) {
-        setError("Error al cargar asistencias")
-      }
+  const fetchData = async () => {
+    try {
+      await getAsistencias();
+    } catch (err) {
+      setError("Error al cargar asistencias");
     }
-    fetchData()
-  }, [fechaInicio, fechaFin, getAsistenciasPorRango])
+  };
+  fetchData();
+}, [getAsistencias]);
+
 
   const handleExportarPagos = async () => {
     setExportando(true)
@@ -79,7 +80,7 @@ export default function Asistencias() {
     if (!acc[clienteId]) {
       acc[clienteId] = {
         cliente_id: clienteId,
-        nombre: asistencia.nombre || "Desconocido",
+        nombre: asistencia.cliente || "Desconocido",
         asistencias: [],
       }
     }
@@ -97,7 +98,7 @@ export default function Asistencias() {
   const diasSemana = eachDayOfInterval({ start: new Date(fechaInicio), end: new Date(fechaFin) })
   const asistenciasPorDia = diasSemana.map((dia) => {
     const diaStr = format(dia, "yyyy-MM-dd")
-    const count = asistencias.filter((a) => a.fecha_asistencia?.startsWith(diaStr)).length
+    const count = asistencias.filter((a) => a.hora_ingreso?.startsWith(diaStr)).length
     return {
       dia: format(dia, "EEE", { locale: es }),
       asistencias: count,
@@ -306,7 +307,7 @@ export default function Asistencias() {
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <Clock className="w-4 h-4" />
                           {ultimaAsistencia?.fecha_asistencia
-                            ? format(new Date(ultimaAsistencia.fecha_asistencia), "dd/MM/yyyy HH:mm")
+                            ? format(new Date(ultimaAsistencia.hora_ingreso), "dd/MM/yyyy HH:mm")
                             : "-"}
                         </div>
                       </td>

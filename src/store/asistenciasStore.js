@@ -36,12 +36,16 @@ export const useAsistenciasStore = create((set) => ({
     }
   },
 
-  getAsistenciasPorRango: async (desde, hasta) => {
-    try {
-      const response = await api.get(`/asistencias/por-rango?desde=${desde}&hasta=${hasta}`)
-      return response.data
-    } catch (error) {
-      throw error
-    }
-  },
+  getAsistencias: async () => {
+  set({ loading: true, error: null });
+  try {
+    const response = await api.get("/asistencias");
+    set({ asistencias: response.data, loading: false });
+    return response.data;
+  } catch (error) {
+    set({ error: error.response?.data?.error || "Error al cargar asistencias", loading: false });
+    throw error;
+  }
+}
+,
 }))
