@@ -21,12 +21,12 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden text-white">
       {/* Imagen de fondo con overlay */}
       <div
         className="absolute inset-0 z-0"
         style={{
-          backgroundImage: "url(/placeholder.svg?height=1080&width=1920&query=modern+gym+interior+with+equipment)",
+          backgroundImage: "url(https://image2url.com/r2/default/images/1770847991937-bb8cfe80-7d77-49f9-8cfb-e3f86785ae0d.blob)",
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
@@ -36,9 +36,9 @@ export default function Login() {
 
       {/* Contenido del login */}
       <div className="relative z-10 w-full max-w-md px-6 animate-fade-in">
-        <div className="bg-card/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-border p-8">
+        <div className="bg-card/90 backdrop-blur-md rounded-2xl shadow-2xl border border-border p-8">
           {/* Logo y título */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-8 text-white">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-500 to-accent-500 rounded-2xl mb-4 animate-slide-up">
               <Dumbbell className="w-8 h-8 text-white" />
             </div>
@@ -47,7 +47,7 @@ export default function Login() {
           </div>
 
           {/* Formulario */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6 text-white">
             {error && (
               <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 flex items-start gap-3 animate-slide-up">
                 <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
