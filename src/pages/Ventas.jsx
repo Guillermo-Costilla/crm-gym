@@ -31,6 +31,11 @@ export default function Ventas() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [exportMes, setExportMes] = useState(format(new Date(), "yyyy-MM"));
+  const [currentPage, setCurrentPage] = useState(1);
+  const ventasPorPagina = 5;
+
+  const indexOfLastVenta = currentPage * ventasPorPagina;
+  const indexOfFirstVenta = indexOfLastVenta - ventasPorPagina;
 
   const fechaHoy = new Date().toISOString().slice(0, 10);
 
@@ -71,53 +76,53 @@ export default function Ventas() {
     setError(null);
   };
 
- function calcularTotal(producto_id, cantidad, productos) {
-  const producto = productos.find((p) => p.id === parseInt(producto_id))
-  const precioUnitario = producto?.precio || 0
-  return precioUnitario * parseInt(cantidad)
-}
-
-const handleSubmit = async (e) => {
-  e.preventDefault()
-
-  const cantidad = parseInt(formData.cantidad)
-  const total = calcularTotal(formData.producto_id, cantidad, productos)
-  console.log("Cantidad:", cantidad, "Total:", total)
-
-  if (
-    !formData.cliente_id ||
-    !formData.producto_id ||
-    !cantidad ||
-    !formData.fecha_venta ||
-    !total ||
-    isNaN(total)
-  ) {
-    setError('❌ Faltan datos válidos para registrar la venta')
-    return
+  function calcularTotal(producto_id, cantidad, productos) {
+    const producto = productos.find((p) => p.id === parseInt(producto_id));
+    const precioUnitario = producto?.precio || 0;
+    return precioUnitario * parseInt(cantidad);
   }
 
-  const venta = {
-    cliente_id: parseInt(formData.cliente_id),
-    producto_id: parseInt(formData.producto_id),
-    cantidad,
-    fecha_venta: formData.fecha_venta,
-    total,
-  }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  console.log("Datos de la venta a crear:", venta)
+    const cantidad = parseInt(formData.cantidad);
+    const total = calcularTotal(formData.producto_id, cantidad, productos);
+    console.log("Cantidad:", cantidad, "Total:", total);
 
-  const resultado = await createVenta(venta)
+    if (
+      !formData.cliente_id ||
+      !formData.producto_id ||
+      !cantidad ||
+      !formData.fecha_venta ||
+      !total ||
+      isNaN(total)
+    ) {
+      setError("❌ Faltan datos válidos para registrar la venta");
+      return;
+    }
 
-  console.log("Resultado de la creación de venta:", resultado)
+    const venta = {
+      cliente_id: parseInt(formData.cliente_id),
+      producto_id: parseInt(formData.producto_id),
+      cantidad,
+      fecha_venta: formData.fecha_venta,
+      total,
+    };
 
-  if (resultado.success) {
-    setSuccess('✅ Venta registrada con éxito')
-    fetchVentas()
-    handleCloseModal()
-  } else {
-    setError(resultado.error)
-  }
-}
+    console.log("Datos de la venta a crear:", venta);
+
+    const resultado = await createVenta(venta);
+
+    console.log("Resultado de la creación de venta:", resultado);
+
+    if (resultado.success) {
+      setSuccess("✅ Venta registrada con éxito");
+      fetchVentas();
+      handleCloseModal();
+    } else {
+      setError(resultado.error);
+    }
+  };
 
   const handleExportar = async () => {
     setError(null);
@@ -151,9 +156,17 @@ const handleSubmit = async (e) => {
     return clienteNombre.includes(search) || productoNombre.includes(search);
   });
 
+  const ventasPaginados = filteredVentas.slice(
+    indexOfFirstVenta,
+    indexOfLastVenta,
+  );
+  const totalPages = Math.ceil(
+    filteredVentas.length / ventasPorPagina,
+  );
+
   const totalVentas = ventas.reduce(
     (sum, venta) => sum + Number.parseFloat(venta.total || 0),
-    0
+    0,
   );
 
   return (
@@ -295,7 +308,7 @@ const handleSubmit = async (e) => {
                 </tr>
               </thead>
               <tbody>
-                {filteredVentas.map((venta, index) => (
+                {ventasPaginados.map((venta, index) => (
                   <tr
                     key={venta.id}
                     className="border-t border-border hover:bg-muted/50 transition-smooth animate-slide-up"
@@ -337,6 +350,33 @@ const handleSubmit = async (e) => {
                 ))}
               </tbody>
             </table>
+            {/* Paginación */}
+
+            <div className="flex justify-center gap-2 mt-4">
+              <button
+                onClick={() => setCurrentPage((p) => p - 1)}
+                disabled={currentPage === 1}
+              >
+                Anterior
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={currentPage === i + 1 ? "font-bold underline" : ""}
+                >
+                  {i + 1}
+                </button>
+              ))}
+
+              <button
+                onClick={() => setCurrentPage((p) => p + 1)}
+                disabled={currentPage === totalPages}
+              >
+                Siguiente
+              </button>
+            </div>
           </div>
         )}
       </div>
