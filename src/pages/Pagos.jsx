@@ -38,6 +38,13 @@ export default function Pagos() {
   const [success, setSuccess] = useState(null);
   const [exportMes, setExportMes] = useState(format(new Date(), "yyyy-MM"));
   const [accionEnCurso, setAccionEnCurso] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pagosPorPagina = 5;
+
+  const indexOfLastPago = currentPage * pagosPorPagina;
+  const indexOfFirstPago = indexOfLastPago - pagosPorPagina;
+
+  
 
   const [formData, setFormData] = useState({
     cliente_id: "",
@@ -127,12 +134,15 @@ export default function Pagos() {
     return matchesSearch && matchesFilter;
   });
 
+  const pagosPaginados = filteredPagos.slice(indexOfFirstPago, indexOfLastPago);
+  const totalPages = Math.ceil(filteredPagos.length / pagosPorPagina);
+
   const hoy = new Date();
   const mesActual = hoy.getMonth(); // noviembre = 10
   const añoActual = hoy.getFullYear();
 
   const totalPagosDelMes = usePagosStore((state) =>
-    state.getTotalPagosDelMes(mesActual, añoActual)
+    state.getTotalPagosDelMes(mesActual, añoActual),
   );
 
   const pagosPendientes = pagos.filter((p) => !p.pagado).length;
@@ -293,7 +303,7 @@ export default function Pagos() {
                 </tr>
               </thead>
               <tbody>
-                {filteredPagos.map((pago, index) => (
+                {pagosPaginados.map((pago, index) => (
                   <tr
                     key={pago.id}
                     className="border-t border-border hover:bg-muted/50 transition-smooth animate-slide-up"
@@ -367,7 +377,7 @@ export default function Pagos() {
                         const estado = getEstadoPagoCliente(cliente);
                         console.log(
                           "cliente.fecha_registro:",
-                          cliente?.fecha_registro
+                          cliente?.fecha_registro,
                         );
 
                         return (
@@ -387,6 +397,34 @@ export default function Pagos() {
                 ))}
               </tbody>
             </table>
+
+            {/* Paginación */}
+
+            <div className="flex justify-center gap-2 mt-4">
+              <button
+                onClick={() => setCurrentPage((p) => p - 1)}
+                disabled={currentPage === 1}
+              >
+                Anterior
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={currentPage === i + 1 ? "font-bold underline" : ""}
+                >
+                  {i + 1}
+                </button>
+              ))}
+
+              <button
+                onClick={() => setCurrentPage((p) => p + 1)}
+                disabled={currentPage === totalPages}
+              >
+                Siguiente
+              </button>
+            </div>
           </div>
         )}
       </div>
