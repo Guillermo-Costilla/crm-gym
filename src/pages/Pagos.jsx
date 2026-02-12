@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 
 export default function Pagos() {
+  const { clientes, fetchClientes, getClienteById } = useClientesStore();
   const {
     pagos,
     loading,
@@ -28,7 +29,9 @@ export default function Pagos() {
     marcarComoPagado,
     getEstadoPagoCliente,
   } = usePagosStore();
-  const { clientes, fetchClientes, getClienteById } = useClientesStore();
+
+  console.log("Clientes: ", clientes);
+  console.log("Pagos: ", pagos);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("todos");
@@ -43,8 +46,6 @@ export default function Pagos() {
 
   const indexOfLastPago = currentPage * pagosPorPagina;
   const indexOfFirstPago = indexOfLastPago - pagosPorPagina;
-
-  
 
   const [formData, setFormData] = useState({
     cliente_id: "",
@@ -297,9 +298,10 @@ export default function Pagos() {
                   <th className="text-center py-4 px-6 text-sm font-semibold text-foreground">
                     Estado
                   </th>
-                  <th className="text-center py-4 px-6 text-sm font-semibold text-foreground">
+                  {/* <th className="text-center py-4 px-6 text-sm font-semibold text-foreground">
                     Vencimiento
-                  </th>
+                  </th> */}
+                  
                 </tr>
               </thead>
               <tbody>
@@ -371,14 +373,17 @@ export default function Pagos() {
                         </div>
                       )}
                     </td>
-                    <td className="py-4 px-6 text-center">
+                    {/* <td className="py-4 px-6 text-center">
                       {(() => {
                         const cliente = getClienteById(pago.cliente_id);
+
+                        if (!cliente) {
+                          return (
+                            <span className="text-gray-400">Cargando...</span>
+                          );
+                        }
+
                         const estado = getEstadoPagoCliente(cliente);
-                        console.log(
-                          "cliente.fecha_registro:",
-                          cliente?.fecha_registro,
-                        );
 
                         return (
                           <span className={`text-${estado.color}-500`}>
@@ -392,7 +397,8 @@ export default function Pagos() {
                           </span>
                         );
                       })()}
-                    </td>
+                    </td> */}
+                    
                   </tr>
                 ))}
               </tbody>
