@@ -146,7 +146,29 @@ export default function Pagos() {
     state.getTotalPagosDelMes(mesActual, añoActual),
   );
 
-  const pagosPendientes = pagos.filter((p) => !p.pagado).length;
+  const pagosPendientes = pagos.filter((p) => {
+    const pagado = p.pagado;
+    const estaPagado =
+      pagado === 1 || pagado === true || pagado === "1" || pagado === "true";
+    return !estaPagado;
+  }).length;
+
+  // Normalizo y agrupo pendientes por tipo (mensual/anual)
+  const pendientesMap = pagos.reduce((acc, p) => {
+    const pagado = p.pagado;
+    const estaPagado = pagado === 1 || pagado === true || pagado === "1" || pagado === "true";
+    if (estaPagado) return acc;
+    const rawTipo = (p.tipo || "mensual").toString();
+    const tipoNorm = rawTipo.trim().toLowerCase();
+    acc[tipoNorm] = (acc[tipoNorm] || 0) + 1;
+    return acc;
+  }, {});
+
+  const mensualAliases = ["mensual", "monthly", "mensualidad", "mensualidades", "m"]; 
+  const anualAliases = ["anual", "annual", "anualidad", "a"];
+
+  const pendientesMensual = mensualAliases.reduce((sum, key) => sum + (pendientesMap[key] || 0), 0);
+  const pendientesAnual = anualAliases.reduce((sum, key) => sum + (pendientesMap[key] || 0), 0);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -226,8 +248,11 @@ export default function Pagos() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground mb-1">Pendientes</p>
-              <p className="text-3xl font-bold text-yellow-500">
-                {pagosPendientes}
+              <p className="text-3xl font-bold text-yellow-500">{pagosPendientes}</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Mensual: <span className="font-semibold text-foreground">{pendientesMensual}</span>
+                {' '}·{' '}
+                Anual: <span className="font-semibold text-foreground">{pendientesAnual}</span>
               </p>
             </div>
             <Clock className="w-10 h-10 text-yellow-500" />
@@ -349,7 +374,7 @@ export default function Pagos() {
                           </span>
                           <button
                             onClick={async () => {
-                              setAccionEnCurso(pago.id); // 👈 variable de estado para spinner
+                              setAccionEnCurso(pago.id); // uso estado para spinner
                               const result = await marcarComoPagado(pago.id);
                               setAccionEnCurso(null);
                               if (result.success) {

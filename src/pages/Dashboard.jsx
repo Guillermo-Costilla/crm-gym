@@ -4,7 +4,7 @@ import { useDashboardStore } from "../store/dashboardStore";
 import { usePagosStore } from "../store/pagosStore";
 import { useVentasStore } from "../store/ventasStore";
 import { useAsistenciasStore } from "../store/asistenciasStore";
-import { format, subDays, differenceInDays } from "date-fns";
+import { format, subDays, subMonths, differenceInDays, getDaysInMonth } from "date-fns";
 import { es } from "date-fns/locale";
 import Card from "../components/Card";
 import GraficoBar from "../components/GraficoBar";
@@ -20,41 +20,25 @@ import {
 
 export default function Dashboard() {
   const { clientes, fetchClientes } = useClientesStore();
-
-  useEffect(() => {
-    const cargarDatos = async () => {
-      try {
-        await Promise.all([
-          fetchDashboard(fechaHoy),
-          fetchPagos(),
-          fetchVentas(),
-          getAsistenciasPorDia(fechaHoy),
-          fetchClientes(), // 👈 nuevo
-        ]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    cargarDatos();
-  }, []);
-
-  const fechaHoy = format(new Date(), "yyyy-MM-dd");
-
   const { dashboard, fetchDashboard } = useDashboardStore();
   const { pagos, fetchPagos, getTotalPagosDelMes } = usePagosStore();
   const { ventas, fetchVentas } = useVentasStore();
-  const { asistencias, getAsistenciasPorDia } = useAsistenciasStore();
+  const { asistencias, getAsistencias } = useAsistenciasStore();
 
   const [loading, setLoading] = useState(true);
+  const [paginaActual, setPaginaActual] = useState(1);
+
+  const fechaHoy = format(new Date(), "yyyy-MM-dd");
 
   useEffect(() => {
     const cargarDatos = async () => {
       try {
+        const hoyFormato = format(new Date(), "yyyy-MM-dd");
         await Promise.all([
-          fetchDashboard(fechaHoy),
+          fetchDashboard(hoyFormato),
           fetchPagos(),
           fetchVentas(),
-          getAsistenciasPorDia(fechaHoy),
+          getAsistencias(),
           fetchClientes(),
         ]);
       } finally {
@@ -62,40 +46,49 @@ export default function Dashboard() {
       }
     };
     cargarDatos();
-  }, []);
+  }, [fetchDashboard, fetchPagos, fetchVentas, getAsistencias, fetchClientes]);
+
+  const hoy = new Date();
+  const mesActual = hoy.getMonth();
+  const añoActual = hoy.getFullYear();
+
+  const ingresosVentas = ventas
+    .filter((v) => {
+      if (!v.fecha) return false;
+
+      const [year, month, day] = v.fecha.split("-").map(Number);
+      const fecha = new Date(year, month - 1, day);
+
+      return (
+        fecha.getMonth() === mesActual && fecha.getFullYear() === añoActual
+      );
+    })
+    .reduce((acc, v) => acc + Number(v.total || 0), 0);
 
   const ingresosPagos = getTotalPagosDelMes();
-  const ingresosVentas = ventas.reduce((acc, v) => acc + (v.total || 0), 0);
   const ingresosMes = ingresosPagos + ingresosVentas;
 
-  const nuevosClientes =
-    dashboard?.nuevos_clientes_mes?.reduce(
-      (acc, item) => acc + item.nuevos,
-      0
-    ) || 0;
+  const totalClientes = clientes.length;
 
-  const asistenciasHoy = dashboard?.asistencias_hoy?.length || 0;
+  const asistenciasHoy = asistencias
+    .filter((a) => a.hora_ingreso?.startsWith(fechaHoy))
+    .length;
   const ventasHoy = dashboard?.ventas_hoy || 0;
   const ingresosHoy = dashboard?.ingresos_hoy || 0;
-  const concurrenciaActual = dashboard?.concurrencia_actual || 0;
+  const concurrenciaActual = asistencias
+    .filter((a) => a.hora_ingreso?.startsWith(fechaHoy) && !a.hora_salida)
+    .length;
 
-  const clientesConPago = pagos
-    .filter((p) => p.pagado)
-    .map((p) => p.cliente_id);
-  const clientesConAsistencia = asistencias.map((a) => a.cliente_id);
-  const retencion = clientesConPago.filter((id) =>
-    clientesConAsistencia.includes(id)
-  ).length;
-  const retencionPorcentaje =
-    clientesConPago.length > 0
-      ? ((retencion / clientesConPago.length) * 100).toFixed(1)
-      : "0";
+  const pagosHoy = pagos
+    .filter((p) => p.pagado && p.fecha_pago?.startsWith(fechaHoy))
+    .length;
 
   const clientesActivos = dashboard?.clientes_activos || 0;
 
-  const dias = Array.from({ length: 7 }, (_, i) => subDays(new Date(), 6 - i));
-  const ingresosPorDia = dias.map((dia) => {
-    const fecha = format(dia, "yyyy-MM-dd");
+  const diasEnMes = getDaysInMonth(new Date(añoActual, mesActual));
+  const ingresosPorDia = Array.from({ length: diasEnMes }, (_, i) => {
+    const dia = i + 1;
+    const fecha = format(new Date(añoActual, mesActual, dia), "yyyy-MM-dd");
     const ventasDelDia = ventas
       .filter((v) => v.fecha === fecha)
       .reduce((acc, v) => acc + v.total, 0);
@@ -103,19 +96,20 @@ export default function Dashboard() {
       .filter((p) => p.pagado && p.fecha_pago?.startsWith(fecha))
       .reduce((acc, p) => acc + p.monto, 0);
     return {
-      fecha: format(dia, "dd/MM", { locale: es }),
+      fecha: format(new Date(añoActual, mesActual, dia), "dd/MM", { locale: es }),
       ingresos: ventasDelDia + pagosDelDia,
     };
   });
 
-  const asistenciasPorHora = Array.from({ length: 12 }, (_, i) => {
-    const hora = i + 8;
+  const asistenciasPorDiaMes = Array.from({ length: diasEnMes }, (_, i) => {
+    const dia = i + 1;
+    const fecha = format(new Date(añoActual, mesActual, dia), "yyyy-MM-dd");
     const count = asistencias.filter((a) => {
-      const h = new Date(a.hora_ingreso).getHours();
-      return h === hora;
+      const fechaAsistencia = a.hora_ingreso?.substring(0, 10);
+      return fechaAsistencia === fecha;
     }).length;
     return {
-      hora: `${hora}:00`,
+      fecha: format(new Date(añoActual, mesActual, dia), "dd/MM", { locale: es }),
       asistencias: count,
     };
   });
@@ -126,29 +120,105 @@ export default function Dashboard() {
       clientes: item.nuevos,
     })) || [];
 
-  const productosTopData = dashboard?.producto_top
-    ? [
-        {
-          name: dashboard.producto_top.nombre,
-          value: dashboard.producto_top.total,
-        },
-        {
-          name: "Otros",
-          value: Math.max(
-            0,
-            dashboard.ventas_hoy - dashboard.producto_top.total
-          ),
-        },
-      ]
-    : [];
+  // Calculo: nuevos clientes últimos 12 meses (fallback a dashboard/clientes)
+  const mesesUltimos12 = Array.from({ length: 12 }, (_, i) => subMonths(new Date(), 11 - i));
+  const mesesKeys = mesesUltimos12.map((d) => format(d, "yyyy-MM"));
+
+  // Uso datos de dashboard si existen
+  let nuevosClientes12 = mesesKeys.map((m, idx) => ({ mes: format(mesesUltimos12[idx], "MMM", { locale: es }), clientes: 0 }));
+
+  if (dashboard?.nuevos_clientes_mes && dashboard.nuevos_clientes_mes.length > 0) {
+    const map = {};
+    dashboard.nuevos_clientes_mes.forEach((it) => {
+      // Formato esperado: 'YYYY-MM' o 'YYYY-MM-01'
+      const key = String(it.mes).slice(0, 7);
+      map[key] = (map[key] || 0) + (it.nuevos || 0);
+    });
+    nuevosClientes12 = mesesKeys.map((m, idx) => ({ mes: format(mesesUltimos12[idx], "MMM", { locale: es }), clientes: map[m] || 0 }));
+  } else {
+    // Fallback: contar por fecha de alta en `clientes` si no hay datos en dashboard
+    const posibleCampos = ["created_at", "createdAt", "fecha_registro", "fecha_creacion", "fechaAlta"];
+    const map = {};
+    clientes.forEach((c) => {
+      const fechaStr = posibleCampos.reduce((acc, f) => acc || c[f] || c[f?.toLowerCase()], null);
+      if (!fechaStr) return;
+      const d = new Date(fechaStr);
+      if (isNaN(d)) return;
+      const key = format(d, "yyyy-MM");
+      map[key] = (map[key] || 0) + 1;
+    });
+    nuevosClientes12 = mesesKeys.map((m, idx) => ({ mes: format(mesesUltimos12[idx], "MMM", { locale: es }), clientes: map[m] || 0 }));
+  }
+
+  const productosTopData = (() => {
+    
+    const agruparPorProducto = (listaVentas) => {
+      const map = {};
+      listaVentas.forEach((venta) => {
+        if (venta.producto) {
+          const nombre = venta.producto;
+          if (!map[nombre]) map[nombre] = { nombre, total: 0, cantidad: 0 };
+          map[nombre].total += Number(venta.total || 0);
+          map[nombre].cantidad += 1;
+          return;
+        }
+        if (Array.isArray(venta.items)) {
+          venta.items.forEach((it) => {
+            const nombre = it.nombre || it.producto || "Desconocido";
+            const monto = Number(it.total || it.precio || 0);
+            if (!map[nombre]) map[nombre] = { nombre, total: 0, cantidad: 0 };
+            map[nombre].total += monto;
+            map[nombre].cantidad += Number(it.cantidad || 1);
+          });
+          return;
+        }
+        const nombre = venta.descripcion || "Desconocido";
+        if (!map[nombre]) map[nombre] = { nombre, total: 0, cantidad: 0 };
+        map[nombre].total += Number(venta.total || 0);
+        map[nombre].cantidad += 1;
+      });
+      return Object.values(map).sort((a, b) => b.cantidad - a.cantidad || b.total - a.total);
+    };
+
+    
+    const ventasMes = ventas.filter((v) => {
+      if (!v.fecha) return false;
+      const [y, m] = v.fecha.split("-").map(Number);
+      return y === añoActual && m - 1 === mesActual;
+    });
+
+    let productos = agruparPorProducto(ventasMes);
+
+    
+    if (productos.length === 0) {
+      productos = agruparPorProducto(ventas);
+    }
+
+    if (productos.length === 0 && dashboard?.producto_top) {
+      return [
+        { name: dashboard.producto_top.nombre, value: dashboard.producto_top.total },
+      ];
+    }
+
+    if (productos.length === 0) return [];
+
+    const top = productos[0];
+    const totalBase = (ventasMes.length > 0 ? ventasMes : ventas).reduce((acc, v) => acc + Number(v.total || 0), 0);
+    const otros = Math.max(0, totalBase - top.total);
+
+    return [
+      { name: top.nombre, value: top.total },
+      { name: "Otros", value: otros },
+    ];
+  })();
 
   const clientesSinPago = [
     ...new Set(
       asistencias
         .filter(
-          (a) => !pagos.some((p) => p.cliente_id === a.cliente_id && p.pagado)
+          (a) => !pagos.some((p) => p.cliente_id === a.cliente_id && p.pagado),
         )
-        .map((a) => a.cliente_id)
+        .map((a) => a.cliente_id),
     ),
   ];
 
@@ -158,11 +228,11 @@ export default function Dashboard() {
         .filter((p) => {
           const vencimiento = new Date(p.fecha_pago);
           vencimiento.setMonth(
-            vencimiento.getMonth() + (p.tipo === "Mensual" ? 1 : 12)
+            vencimiento.getMonth() + (p.tipo === "Mensual" ? 1 : 12),
           );
           return p.pagado && vencimiento < new Date();
         })
-        .map((p) => p.cliente_id)
+        .map((p) => p.cliente_id),
     ),
   ];
 
@@ -197,12 +267,12 @@ export default function Dashboard() {
   const clientesConAsistencias = clientes
     .map((cliente) => {
       const asistenciasCliente = asistencias.filter(
-        (a) => a.cliente_id === cliente.id
+        (a) => a.cliente_id === cliente.id,
       );
       if (asistenciasCliente.length === 0) return null;
 
       const ultima = asistenciasCliente.reduce((max, a) =>
-        new Date(a.hora_ingreso) > new Date(max.hora_ingreso || 0) ? a : max
+        new Date(a.hora_ingreso) > new Date(max.hora_ingreso || 0) ? a : max,
       );
       const fechaValida =
         ultima?.hora_ingreso && !isNaN(new Date(ultima.hora_ingreso));
@@ -221,9 +291,17 @@ export default function Dashboard() {
         ultima: fechaFormateada,
       };
     })
-    .filter(Boolean); // elimina los null
+    .filter(Boolean); // elimino nulls
 
   console.log("✅ Clientes con asistencias:", clientesConAsistencias);
+
+  const itemsPorPagina = 3;
+  const totalPaginas = Math.ceil(clientesConAsistencias.length / itemsPorPagina);
+  const indiceInicio = (paginaActual - 1) * itemsPorPagina;
+  const indiceFin = indiceInicio + itemsPorPagina;
+  const clientesPaginados = clientesConAsistencias.slice(indiceInicio, indiceFin);
+  const porcentajeActivos =
+    totalClientes > 0 ? ((clientesActivos / totalClientes) * 100).toFixed(1) : "0";
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -241,15 +319,15 @@ export default function Dashboard() {
           color="green"
         />
         <Card
-          title="Nuevos Clientes"
-          value={nuevosClientes}
+          title="Total de Clientes"
+          value={totalClientes}
           icon={<Users />}
           color="blue"
         />
         <Card
-          title="Retención"
-          value={`${retencionPorcentaje}%`}
-          icon={<RefreshCw />}
+          title="Pagos de Hoy"
+          value={pagosHoy}
+          icon={<DollarSign />}
           color="yellow"
         />
         <Card
@@ -291,23 +369,47 @@ export default function Dashboard() {
       {/* 📊 Gráficos clave */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <GraficoBar
-          titulo="Ingresos últimos 7 días"
+          titulo="Ingresos del mes"
           data={ingresosPorDia}
           dataKey="ingresos"
           color="#10b981"
         />
         <GraficoBar
-          titulo="Asistencias por hora (hoy)"
-          data={asistenciasPorHora}
+          titulo="Asistencias por día del mes"
+          data={asistenciasPorDiaMes}
           dataKey="asistencias"
           color="#06b6d4"
         />
-        <GraficoLinea
-          titulo="Nuevos clientes por mes"
-          data={nuevosClientesData}
-          dataKey="clientes"
-          color="#3b82f6"
-        />
+        <div className="bg-card border border-border rounded-xl p-6 animate-slide-up">
+          <GraficoLinea
+            titulo="Nuevos clientes por mes"
+            data={nuevosClientesData}
+            dataKey="clientes"
+            color="#3b82f6"
+          />
+          <div className="mt-4 grid grid-cols-2 gap-4">
+            <div className="bg-muted border border-border rounded-lg p-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Clientes Activos (%)</p>
+                <p className="text-2xl font-bold text-foreground">{porcentajeActivos}%</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-muted-foreground">Activos</p>
+                <p className="text-lg font-semibold text-primary-500">{clientesActivos}</p>
+              </div>
+            </div>
+            <div className="bg-muted border border-border rounded-lg p-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Clientes Inactivos (+30d)</p>
+                <p className="text-2xl font-bold text-foreground">{clientesInactivos.length}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-muted-foreground">Total</p>
+                <p className="text-lg font-semibold text-foreground">{totalClientes}</p>
+              </div>
+            </div>
+          </div>
+        </div>
         {productosTopData.length > 0 && (
           <GraficoPie titulo="Producto más vendido" data={productosTopData} />
         )}
@@ -361,7 +463,7 @@ export default function Dashboard() {
               </tr>
             </thead>
             <tbody>
-              {clientesConAsistencias.map((c) => (
+              {clientesPaginados.map((c) => (
                 <tr
                   key={c.id}
                   className="border-b border-border hover:bg-muted transition-smooth"
@@ -374,6 +476,44 @@ export default function Dashboard() {
             </tbody>
           </table>
         </div>
+        {clientesConAsistencias.length > 0 && (
+          <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+            <p className="text-sm text-muted-foreground">
+              Mostrando {indiceInicio + 1}-{Math.min(indiceFin, clientesConAsistencias.length)} de {clientesConAsistencias.length}
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPaginaActual(Math.max(1, paginaActual - 1))}
+                disabled={paginaActual === 1}
+                className="px-3 py-2 bg-muted border border-border rounded-lg hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed text-foreground transition-smooth"
+              >
+                ← Anterior
+              </button>
+              <div className="flex items-center gap-2">
+                {Array.from({ length: totalPaginas }, (_, i) => i + 1).map((num) => (
+                  <button
+                    key={num}
+                    onClick={() => setPaginaActual(num)}
+                    className={`w-8 h-8 rounded-lg transition-smooth ${
+                      paginaActual === num
+                        ? "bg-primary-500 text-white"
+                        : "bg-muted text-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    {num}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setPaginaActual(Math.min(totalPaginas, paginaActual + 1))}
+                disabled={paginaActual === totalPaginas}
+                className="px-3 py-2 bg-muted border border-border rounded-lg hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed text-foreground transition-smooth"
+              >
+                Siguiente →
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

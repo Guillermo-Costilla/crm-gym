@@ -74,7 +74,7 @@ export default function Asistencias() {
     setExportando(false)
   }
 
-  // Agrupar asistencias por cliente
+  // Agrupo asistencias por cliente
   const asistenciasPorCliente = asistencias.reduce((acc, asistencia) => {
     const clienteId = asistencia.cliente_id
     if (!acc[clienteId]) {
@@ -94,7 +94,7 @@ export default function Asistencias() {
     cliente.nombre.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
-  // Preparar datos para el gráfico semanal
+  // Preparo datos para gráfico semanal
   const diasSemana = eachDayOfInterval({ start: new Date(fechaInicio), end: new Date(fechaFin) })
   const asistenciasPorDia = diasSemana.map((dia) => {
     const diaStr = format(dia, "yyyy-MM-dd")

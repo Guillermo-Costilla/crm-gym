@@ -139,21 +139,27 @@ export const usePagosStore = create((set, get) => ({
   ======================= */
 
   getTotalPagosDelMes: (
-    mes = new Date().getMonth(),
-    año = new Date().getFullYear()
-  ) => {
-    return get()
-      .pagos
-      .filter(p => {
-        const fecha = new Date(p.fecha_pago);
-        return (
-          fecha.getMonth() === mes &&
-          fecha.getFullYear() === año &&
-          p.pagado === 1
-        );
-      })
-      .reduce((total, p) => total + p.monto, 0);
-  },
+  mes = new Date().getMonth(),
+  año = new Date().getFullYear()
+) => {
+  return get().pagos
+    .filter(p => {
+      if (!p.fecha_pago) return false;
+
+      // Parse seguro YYYY-MM-DD
+      const [year, month, day] = p.fecha_pago.split("-").map(Number);
+      const fecha = new Date(year, month - 1, day);
+
+      const esDelMes =
+        fecha.getMonth() === mes &&
+        fecha.getFullYear() === año;
+
+      const estaPagado = p.pagado === 1 || p.pagado === true;
+
+      return esDelMes && estaPagado;
+    })
+    .reduce((total, p) => total + Number(p.monto || 0), 0);
+},
 
   /* =======================
      REPORTES (API)
