@@ -1,44 +1,87 @@
+# 🏋️ CRM Gym — Frontend
 
-# CRM Gym — Frontend EN DESARROLLO 🛠️🔧⚙️
+Interfaz web para la gestión de gimnasios: clientes, pagos, asistencias y métricas.
 
-Interfaz administrativa para gestión de clientes, asistencias, pagos y métricas en gimnasios. Construida con React 18, Tailwind, Zustand, con enfoque en UX profesional, animaciones suaves.
+Diseñada con foco en experiencia de usuario, rendimiento y consumo eficiente de API.
 
-## 🚧 Estado
-En desarrollo activo — módulo de clientes completo y dashboard inicial funcional.
+---
 
-## 🧰 Stack
-- React 18 + Vite
-- Tailwind CSS
-- Zustand para estado global
-- Axios para consumo de API
-- Zod para validaciones en formularios
+## 🚀 Demo
 
-## 📦 Módulos implementados
-- Clientes: listado, búsqueda, creación/edición con modal animado
-- Dashboard: métricas de clientes y resultados
-- Pagos, productos, asistencias y ventas: en progreso
+🔗 https://crm-gym-app.vercel.app/login
 
-## 🧪 Validaciones
-- Zod + sanitización en formularios
-- Manejo de errores y feedback visual
-- Animaciones con `animate-fade-in`, `slide-up`, etc.
+---
 
-## 🚀 Scripts
--- bash --
-pnpm install
-pnpm dev
+## ⚙️ Funcionalidades
 
-🔐 Variables de entorno
-VITE_API_URL=http://localhost:3000
+- 👥 Gestión de clientes (crear, editar, buscar)
+- 📊 Dashboard con métricas básicas
+- 💳 Integración con sistema de pagos
+- 🔎 Búsqueda y filtrado en tiempo real
+- 💬 Feedback visual y manejo de errores
 
-📁 Estructura
+---
 
+## 🎨 Experiencia de usuario
+
+- Interfaces limpias y responsivas
+- Animaciones suaves (transiciones, modales)
+- Feedback inmediato en acciones del usuario
+- Formularios con validación en tiempo real
+
+---
+
+## 🛠 Stack
+
+- React 18 + Vite  
+- Tailwind CSS  
+- Zustand (estado global)  
+- Axios (consumo de API)  
+- Zod (validaciones)  
+
+---
+
+## 🧱 Arquitectura
+
+```text
 src/
 ├── components/
 ├── pages/
 ├── store/
 ├── utils/
-├── assets/
-└── config/
+├── config/
+```
 
-🧠 Desarrollado por Guillermo Costilla - Full Stack developer.
+Estructura modular orientada a escalabilidad.
+
+---
+
+## 🔗 Integración
+
+Este frontend consume la API del proyecto CRM Gym Backend:
+
+👉 https://crm-gym-pi.vercel.app
+
+---
+
+## ⚡ Instalación
+
+```bash
+pnpm install
+pnpm dev
+````
+Configurar .env:
+````text
+VITE_API_URL=http://localhost:3000
+````
+## 🧠 Qué demuestra este proyecto
+
+- Consumo de APIs REST reales
+- Manejo de estado global con Zustand
+- Construcción de interfaces escalables
+- Validación de formularios y UX
+- Organización de proyectos frontend
+
+## 👨‍💻 Autor
+
+Guillermo Costilla — Full Stack Developer
